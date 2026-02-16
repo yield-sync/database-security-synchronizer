@@ -8,8 +8,13 @@ Cargo.lock
 # =========================
 # Downloaded data (SEC)
 # =========================
+sec_data
+sec_data/*
 companyfacts.zip
+submissions.zip
+
 companyfacts/
+submissions/
 
 # =========================
 # Logs / temp files
@@ -31,3 +36,8 @@ Thumbs.db
 
 # Neovim
 .nvim/
+
+# =========================
+# Other
+# =========================
+.env

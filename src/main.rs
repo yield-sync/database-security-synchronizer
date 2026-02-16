@@ -1,67 +1,82 @@
-use reqwest::blocking::Client;
-use zip::ZipArchive;
+mod database;
+mod handler;
+mod schema;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let zip_path = "companyfacts.zip";
-    let extract_dir = "companyfacts";
+use clap::Parser;
+use dotenvy::dotenv;
+use tokio::time::sleep;
 
-    download_zip(
-        "https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip",
-        zip_path,
-    )?;
+use chrono::{Local};
 
-    unzip(zip_path, extract_dir)?;
+use crate::handler::HandlerSecurityProfile;
+use crate::handler::HandlerTime;
+use crate::handler::handler_time::Seconds;
 
-    println!("Done.");
-    Ok(())
+
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Args
+{
+	/// Run the task immediately instead of waiting for 4am
+	#[arg(long)]
+	run_now: bool,
+
+	/// Logging level (0 = none, 1 = info, 2 = debug)
+	#[arg(long, default_value_t = 1)]
+	log_level: u8,
 }
 
-fn download_zip(
-    url: &str,
-    output_path: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Downloading ZIP...");
 
-    let client = Client::builder().user_agent("yield-sync.xyz w3st.io2021@gmail.com").build()?;
+/**
+* Main function to run the security profile builder
+*/
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>>
+{
+	println!("[INFO] Security Profile Builder starting up at {}", Local::now().format("%Y-%m-%d %H:%M:%S"));
 
-    let mut response = client.get(url).send()?;
-    response.error_for_status_ref()?;
+	dotenv().ok();
 
-    let mut out = std::fs::File::create(output_path)?;
-    std::io::copy(&mut response, &mut out)?;
+	let args: Args = Args::parse();
 
-    println!("Saved to {}", output_path);
-    Ok(())
-}
+	let handler_security_profile: HandlerSecurityProfile = HandlerSecurityProfile::new();
 
-fn unzip(
-    zip_path: &str,
-    extract_dir: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Extracting ZIP...");
+	if args.run_now
+	{
+		println!("[INFO] Running task immediately due to --run-now flag");
 
-    let file = std::fs::File::open(zip_path)?;
-    let mut archive = ZipArchive::new(file)?;
+		if let Err(e) = handler_security_profile.synchronize(args.log_level).await
+		{
+			eprintln!("[ERROR] Error during immediate execution: {}", e);
 
-    std::fs::create_dir_all(extract_dir)?;
+			return Err(e);
+		}
 
-    for i in 0..archive.len() {
-        let mut zipped_file = archive.by_index(i)?;
-        let out_path =
-            std::path::Path::new(extract_dir).join(zipped_file.name());
+		println!("[INFO] Immediate execution completed. Exiting now <3");
 
-        if zipped_file.name().ends_with('/') {
-            std::fs::create_dir_all(&out_path)?;
-        } else {
-            if let Some(parent) = out_path.parent() {
-                std::fs::create_dir_all(parent)?;
-            }
+		return Ok(());
+	}
 
-            let mut out_file = std::fs::File::create(&out_path)?;
-            std::io::copy(&mut zipped_file, &mut out_file)?;
-        }
-    }
+	let time_handler = HandlerTime::new();
 
-    println!("Extracted to {}", extract_dir);
-    Ok(())
+	loop
+	{
+		let initial_delay: Seconds = time_handler.calculate_seconds_until_next_4am();
+
+		println!(
+			"[INFO] Calculated time until next 4am execution: {}h {}m {}s",
+			initial_delay.as_secs() / 3600,
+			(initial_delay.as_secs() % 3600) / 60,
+			initial_delay.as_secs() % 60
+		);
+
+		sleep(initial_delay).await;
+
+		if let Err(e) = handler_security_profile.synchronize(args.log_level).await
+		{
+			eprintln!("[ERROR] Error during execution: {}", e);
+
+			return Err(e);
+		}
+	}
 }
