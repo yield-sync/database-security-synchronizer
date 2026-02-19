@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 use crate::database::table_security::TableSecurity;
 use crate::database::database_connection::DatabaseConnection;
-use crate::handler::HandlerCache;
 use crate::handler::HandlerApiSec;
+use crate::handler::HandlerCacheSubmissionsFileWithNoTickers;
 use crate::handler::HandlerSecurityExchangeTicker;
 use crate::handler::HandlerSecurityFilingCommonStockSharesOutstanding;
 use crate::handler::HandlerSecurityFiling;
@@ -18,6 +18,7 @@ use crate::handler::{HandlerSecurity, SynchronizeSecurity};
 
 pub struct HandlerSecurityProfile
 {}
+
 
 impl HandlerSecurityProfile
 {
@@ -39,6 +40,8 @@ impl HandlerSecurityProfile
 		println!("[INFO] Building security profile at {}", Local::now().format("%Y-%m-%d %H:%M:%S"));
 
 		let handler_api_sec = HandlerApiSec::new();
+
+		let mut handler_cache_submissions_file_with_no_tickers = HandlerCacheSubmissionsFileWithNoTickers::new();
 
 		let db_connection = Arc::new(DatabaseConnection::new().await?);
 
@@ -64,8 +67,6 @@ impl HandlerSecurityProfile
 			None
 		};
 
-		let mut handler_cache = HandlerCache::new();
-
 		for (s_file_name, s_hash) in submissions_file_names_to_hashs
 		{
 			if log_level >= 1
@@ -73,7 +74,7 @@ impl HandlerSecurityProfile
 				println!("[PROCESS] submissions/{}", s_file_name);
 			}
 
-			if handler_cache.is_tickerless_submission_file(&s_file_name)
+			if handler_cache_submissions_file_with_no_tickers.is_tickerless_submission_file(&s_file_name)
 			{
 				if log_level >= 2
 				{
@@ -98,7 +99,7 @@ impl HandlerSecurityProfile
 					);
 				}
 
-				handler_cache.add_tickerless_submission_file_name(&s_file_name);
+				handler_cache_submissions_file_with_no_tickers.add_tickerless_submission_file_name(&s_file_name);
 
 				continue;
 			}
