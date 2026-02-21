@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use chrono::{DateTime, Local, NaiveTime};
+use chrono::{ DateTime, Local, NaiveTime };
 
 
 pub type Seconds = std::time::Duration;

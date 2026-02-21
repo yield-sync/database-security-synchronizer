@@ -1,4 +1,4 @@
-use chrono::{Local};
+use chrono::{ Local };
 
 use std::sync::Arc;
 
@@ -13,7 +13,8 @@ use crate::handler::UpdatedSecCompanyfactsAndSubmissions;
 use crate::schema::SubmissionsData;
 use crate::schema::Companyfacts;
 
-use crate::handler::{HandlerSecurity, SynchronizeSecurity};
+use crate::{ log_debug, log_error, log_info, log_warn };
+use crate::handler::{ HandlerSecurity, SynchronizeSecurity };
 
 
 pub struct HandlerSecurityProfile
@@ -35,9 +36,9 @@ impl HandlerSecurityProfile
 	/**
 	* Run Creating Security Profile tasks
 	*/
-	pub async fn synchronize(&self, log_level: u8,) -> Result<(), Box<dyn std::error::Error>>
+	pub async fn synchronize(&self) -> Result<(), Box<dyn std::error::Error>>
 	{
-		println!("[INFO] Building security profile at {}", Local::now().format("%Y-%m-%d %H:%M:%S"));
+		log_info!("Building security profile at {}", Local::now().format("%Y-%m-%d %H:%M:%S"));
 
 		let handler_api_sec = HandlerApiSec::new();
 
@@ -69,20 +70,14 @@ impl HandlerSecurityProfile
 
 		for (s_file_name, s_hash) in submissions_file_names_to_hashs
 		{
-			if log_level >= 1
-			{
-				println!("[PROCESS] submissions/{}", s_file_name);
-			}
+			log_debug!("Processing submissions/{}", s_file_name);
 
 			if handler_cache_submissions_file_with_no_tickers.is_tickerless_submission_file(&s_file_name)
 			{
-				if log_level >= 2
-				{
-					println!(
-						"\t[SKIP] cache.submission-file-with-no-tickers contains submissions/{}, skipping..",
-						s_file_name
-					);
-				}
+				log_debug!(
+					"[SKIP] cache.submission-file-with-no-tickers contains submissions/{}, skipping..",
+					s_file_name
+				);
 
 				continue;
 			}
@@ -91,26 +86,21 @@ impl HandlerSecurityProfile
 
 			if submissions_data.tickers.is_empty()
 			{
-				if log_level >= 2
-				{
-					println!(
-						"\t[SKIP] {} has invalid 'tickers'. adding to cache.json 'submission-file-with-no-tickers'..",
-						s_file_name
-					);
-				}
+				log_debug!(
+					"[SKIP] {} has invalid 'tickers'. adding to cache.json 'submission-file-with-no-tickers'..",
+					s_file_name
+				);
 
 				handler_cache_submissions_file_with_no_tickers.add_tickerless_submission_file_name(&s_file_name);
 
 				continue;
 			}
 
-			if log_level >= 1
-			{
-				println!("\tCIK: {}", submissions_data.cik);
-				println!("\tName: {}", submissions_data.name);
-				println!("\tTickers: {}", submissions_data.tickers.join(", "));
-				println!("\tExchanges: {}", submissions_data.exchanges.join(", "));
-			}
+			log_info!("Synchronizing submissions/{}", s_file_name);
+			log_info!("CIK: {}", submissions_data.cik);
+			log_info!("Name: {}", submissions_data.name);
+			log_info!("Tickers: {}", submissions_data.tickers.join(", "));
+			log_info!("Exchanges: {}", submissions_data.exchanges.join(", "));
 
 			let mut synchronize_required: bool = false;
 
@@ -137,21 +127,14 @@ impl HandlerSecurityProfile
 
 			if !synchronize_required
 			{
-				if log_level >= 1
-				{
-					println!("\t[SKIP] Synchronize not required. Skipping..");
-				}
+				log_info!("[SKIP] Synchronize not required. Skipping..");
 
 				continue;
 			}
 
-			if log_level >= 1
-			{
-				println!("\tSynchronize required..");
-			}
+			log_info!("Synchronize required..");
 
 			(HandlerSecurity::new(db_connection.clone())).synchronize(
-				log_level,
 				&SynchronizeSecurity {
 					cik: submissions_data.cik.clone(),
 					business_country: submissions_data.business_country,
@@ -170,17 +153,15 @@ impl HandlerSecurityProfile
 			).await?;
 
 			if let Err(e) = HandlerSecurityExchangeTicker::new(db_connection.clone()).synchronize(
-				log_level,
 				&submissions_data.cik,
 				&submissions_data.tickers,
 				&submissions_data.exchanges,
 			).await
 			{
-				eprintln!("\tFailed to synchronize tickers and exchanges: {}", e);
+				log_error!("Failed to synchronize tickers and exchanges: {}", e);
 			}
 
 			(HandlerSecurityFiling::new(db_connection.clone())).synchronize(
-				log_level,
 				&submissions_data.cik,
 				&submissions_data.filings
 			).await?;
@@ -191,7 +172,7 @@ impl HandlerSecurityProfile
 			}
 			else
 			{
-				println!("\t[WARN] {} not found in companyfacts.zip file not found. Skipping..", &s_file_name);
+				log_warn!("{} not found in companyfacts.zip file not found. Skipping..", &s_file_name);
 
 				None
 			};
@@ -199,7 +180,6 @@ impl HandlerSecurityProfile
 			if let Some(companyfacts) = companyfacts
 			{
 				(HandlerSecurityFilingCommonStockSharesOutstanding::new(db_connection.clone())).synchronize(
-					log_level,
 					&companyfacts.common_stock_shares_outstanding,
 				).await?;
 			}
@@ -207,7 +187,7 @@ impl HandlerSecurityProfile
 
 		db_connection.close().await?;
 
-		println!("[INFO] Security profiles built successfully.");
+		log_info!("Security profiles built successfully.");
 
 		Ok(())
 	}

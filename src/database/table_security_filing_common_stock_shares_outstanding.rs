@@ -3,6 +3,8 @@ use std::sync::Arc;
 use super::database_connection::DatabaseConnection;
 use crate::schema::CompanyfactsCommonStockSharesOutstanding;
 
+use crate::{ log_info, log_warn };
+
 
 pub enum TableSecurityFilingCommonStockSharesOutstandingInsertionError
 {
@@ -74,8 +76,8 @@ impl TableSecurityFilingCommonStockSharesOutstanding
 		ignore_foreign_key_not_found_error: bool,
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		println!(
-			"\tInserting into security_filing_common_stock_shares_outstanding. projected row count: {}",
+		log_info!(
+			"Inserting into security_filing_common_stock_shares_outstanding. projected row count: {}",
 			companyfacts_common_stock_shares_outstanding.len()
 		);
 
@@ -99,7 +101,7 @@ impl TableSecurityFilingCommonStockSharesOutstanding
 
 					if ignore_foreign_key_not_found_error
 					{
-						eprintln!("\t[WARN] {}, Skipping..", error_message);
+						log_warn!("[WARN] {}, Skipping..", error_message);
 
 						continue;
 					}

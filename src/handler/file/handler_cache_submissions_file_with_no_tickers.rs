@@ -1,8 +1,10 @@
 use serde_json::Value;
 use std::path::PathBuf;
 
-use std::fs::{File, OpenOptions};
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::fs::{ File, OpenOptions };
+use std::io::{ Read, Seek, SeekFrom, Write };
+
+use crate::{ log_debug, log_info };
 
 
 pub struct HandlerCacheSubmissionsFileWithNoTickers
@@ -27,7 +29,7 @@ impl HandlerCacheSubmissionsFileWithNoTickers
 
 		if !path.exists()
 		{
-			println!("submission-file-with-no-tickers.json not found, Creating now..");
+			log_info!("submission-file-with-no-tickers.json not found, Creating now..");
 
 			let mut file = OpenOptions::new().write(true).create(true).open(&path).expect(
 				"Failed to create submission-file-with-no-tickers.json file"
@@ -39,7 +41,7 @@ impl HandlerCacheSubmissionsFileWithNoTickers
 				"Failed to write to submission-file-with-no-tickers.json file"
 			);
 
-			println!("submission-file-with-no-tickers.json created successfully");
+			log_info!("submission-file-with-no-tickers.json created successfully");
 		}
 
 		Self { path }
@@ -73,7 +75,7 @@ impl HandlerCacheSubmissionsFileWithNoTickers
 		// Only push if not already present
 		if !array.iter().any(|v| v.as_str() == Some(submission_file_name))
 		{
-			println!("Caching {} to submission-file-with-no-tickers.json", submission_file_name);
+			log_debug!("Caching {} to submission-file-with-no-tickers.json", submission_file_name);
 
 			array.push(Value::String(submission_file_name.to_string()));
 		}

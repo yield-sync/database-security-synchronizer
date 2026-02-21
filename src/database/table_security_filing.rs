@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{ NaiveDate, NaiveDateTime };
 
 use super::database_connection::DatabaseConnection;
 

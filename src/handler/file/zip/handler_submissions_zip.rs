@@ -4,12 +4,13 @@ use std::io::Read;
 use std::path::PathBuf;
 use zip::ZipArchive;
 
-use chrono::{DateTime, Utc, NaiveDate, NaiveDateTime};
-use sha2::{Digest, Sha256};
-use std::fs::{File};
+use chrono::{ DateTime, Utc, NaiveDate, NaiveDateTime };
+use sha2::{ Digest, Sha256 };
+use std::fs::{ File };
 
 
-use crate::schema::{SubmissionsData, SubmissionsDataFilings};
+use crate::{ log_info };
+use crate::schema::{ SubmissionsData, SubmissionsDataFilings };
 
 
 pub struct SubmissionsZipHandler
@@ -48,7 +49,7 @@ impl SubmissionsZipHandler
 	*/
 	pub fn compute_file_names_to_hashes(&mut self,) -> Result<HashMap<String, String>, Box<dyn std::error::Error>>
 	{
-		println!("Reading {} file names and computing file hashes..", self.path.display());
+		log_info!("Reading {} file names and computing file hashes..", self.path.display());
 
 		let mut results: HashMap<String, String> = HashMap::new();
 		let mut buffer: [u8; 8192] = [0u8; 8192];

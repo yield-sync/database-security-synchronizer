@@ -1,5 +1,7 @@
 use sqlx::MySqlPool;
 
+use crate::{ log_info };
+
 
 pub struct DatabaseConnection
 {
@@ -15,18 +17,18 @@ impl DatabaseConnection
 			|_| "APP__DATABASE__URL environment variable not set"
 		)?;
 
-		println!("Creating connection to Database..");
+		log_info!("Creating connection to Database..");
 
 		let pool = MySqlPool::connect(&database_url).await?;
 
-		println!("Database connection established");
+		log_info!("Database connection established");
 
 		Ok(Self { pool })
 	}
 
 	pub async fn close(&self) -> Result<(), Box<dyn std::error::Error>>
 	{
-		println!("Closing connection to Database..");
+		log_info!("Closing connection to Database..");
 
 		self.pool.close().await;
 

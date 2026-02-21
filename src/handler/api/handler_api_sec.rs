@@ -3,11 +3,13 @@ use std::fs;
 use std::io;
 use std::path::PathBuf;
 
-use std::fs::{File, Metadata};
-use std::time::{Duration, SystemTime};
+use std::fs::{ File, Metadata };
+use std::time::{ Duration, SystemTime };
 
 use crate::handler::file::zip::HandlerCompanyfactsZip;
 use crate::handler::file::zip::SubmissionsZipHandler;
+
+use crate::{ log_info };
 
 
 pub struct UpdatedSecCompanyfactsAndSubmissions
@@ -60,12 +62,12 @@ impl HandlerApiSec
 
 		if !current_path.exists()
 		{
-			println!("No current submissions.zip exists. Skipping archive process..");
+			log_info!("No current submissions.zip exists. Skipping archive process..");
 
 			return Ok(());
 		}
 
-		println!("Renaming submissions.zip to previous_submissions.zip..");
+		log_info!("Renaming submissions.zip to previous_submissions.zip..");
 
 		fs::copy(&current_path, &previous_path)?;
 
@@ -78,7 +80,7 @@ impl HandlerApiSec
 	*/
 	fn download_companyfacts_zip(&self) -> Result<(), Box<dyn std::error::Error>>
 	{
-		println!("Downloading SEC companyfacts.zip..");
+		log_info!("Downloading SEC companyfacts.zip..");
 
 		// Create the directory if it doesn't exist
 		std::fs::create_dir_all(&self.path_dir_tmp)?;
@@ -93,7 +95,7 @@ impl HandlerApiSec
 
 		io::copy(&mut response, &mut output)?;
 
-		println!("Saved to {}", &self.path_dir_tmp.join(Self::COMPANY_FACTS_ZIP).display());
+		log_info!("Saved to {}", &self.path_dir_tmp.join(Self::COMPANY_FACTS_ZIP).display());
 
 		Ok(())
 	}
@@ -104,7 +106,7 @@ impl HandlerApiSec
 	*/
 	fn download_submissions_zip(&self) -> Result<(), Box<dyn std::error::Error>>
 	{
-		println!("Downloading SEC submissions.zip..");
+		log_info!("Downloading SEC submissions.zip..");
 
 		// Create the directory if it doesn't exist
 		std::fs::create_dir_all(&self.path_dir_tmp)?;
@@ -119,7 +121,7 @@ impl HandlerApiSec
 
 		io::copy(&mut response, &mut output)?;
 
-		println!("Saved to {}", self.path_dir_tmp.join(Self::SUBMISSIONS_ZIP).display());
+		log_info!("Saved to {}", self.path_dir_tmp.join(Self::SUBMISSIONS_ZIP).display());
 
 		Ok(())
 	}
@@ -137,7 +139,7 @@ impl HandlerApiSec
 			Ok(m) => m,
 			Err(_) =>
 			{
-				println!("companyfacts.zip is nonexistant.");
+				log_info!("companyfacts.zip is nonexistant.");
 
 				return Ok(true);
 			}
@@ -149,13 +151,13 @@ impl HandlerApiSec
 
 		if age > Self::SECONDS_24_HOURS
 		{
-			println!("companyfacts.zip is old. Redownload needed.");
+			log_info!("companyfacts.zip is old. Redownload needed.");
 
 			return Ok(true);
 		}
 		else
 		{
-			println!("companyfacts.zip has age of {} seconds. No need to redownload.", age.as_secs());
+			log_info!("companyfacts.zip has age of {} seconds. No need to redownload.", age.as_secs());
 
 			return Ok(false);
 		}
@@ -174,7 +176,7 @@ impl HandlerApiSec
 			Ok(m) => m,
 			Err(_) =>
 			{
-				println!("submissions.zip is nonexistant.");
+				log_info!("submissions.zip is nonexistant.");
 
 				return Ok(true);
 			}
@@ -186,13 +188,13 @@ impl HandlerApiSec
 
 		if age > Self::SECONDS_24_HOURS
 		{
-			println!("submissions.zip is old. Redownload needed.");
+			log_info!("submissions.zip is old. Redownload needed.");
 
 			return Ok(true);
 		}
 		else
 		{
-			println!("submissions.zip has age of {} seconds. No need to redownload.", age.as_secs());
+			log_info!("submissions.zip has age of {} seconds. No need to redownload.", age.as_secs());
 
 			return Ok(false);
 		}
@@ -213,7 +215,7 @@ impl HandlerApiSec
 		}
 		else
 		{
-			println!("companyfacts.zip file is up-to-date. Skipping download.");
+			log_info!("companyfacts.zip file is up-to-date. Skipping download.");
 		}
 
 		if self.should_download_submissions_zip()?
@@ -229,14 +231,14 @@ impl HandlerApiSec
 		}
 		else
 		{
-			println!("submissions.zip file is up-to-date. Skipping download.");
+			log_info!("submissions.zip file is up-to-date. Skipping download.");
 		}
 
-		println!("{} exists, initializing a HandlerCompanyfactsZip for it..", Self::COMPANY_FACTS_ZIP);
+		log_info!("{} exists, initializing a HandlerCompanyfactsZip for it..", Self::COMPANY_FACTS_ZIP);
 
 		let handler_companyfacts_zip = HandlerCompanyfactsZip::new(self.path_dir_tmp.join(Self::COMPANY_FACTS_ZIP))?;
 
-		println!("{} exists, initializing a HandlerCompanyfactsZip for it..", Self::SUBMISSIONS_ZIP);
+		log_info!("{} exists, initializing a HandlerCompanyfactsZip for it..", Self::SUBMISSIONS_ZIP);
 
 		let submissions_zip_handler = SubmissionsZipHandler::new(self.path_dir_tmp.join(Self::SUBMISSIONS_ZIP))?;
 
@@ -245,12 +247,12 @@ impl HandlerApiSec
 
 			if previous_path.exists()
 			{
-				println!("{} exists, initializing a SubmissionsZipHandler for it..", Self::PREVIOUS_SUBMISSIONS_ZIP);
+				log_info!("{} exists, initializing a SubmissionsZipHandler for it..", Self::PREVIOUS_SUBMISSIONS_ZIP);
 				Some(SubmissionsZipHandler::new(previous_path)?)
 			}
 			else
 			{
-				println!("{} does not exist", Self::PREVIOUS_SUBMISSIONS_ZIP);
+				log_info!("{} does not exist", Self::PREVIOUS_SUBMISSIONS_ZIP);
 				None
 			}
 		};

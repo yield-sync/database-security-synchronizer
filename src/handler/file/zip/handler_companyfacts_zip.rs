@@ -2,9 +2,9 @@ use serde_json::Value;
 use std::path::PathBuf;
 use zip::ZipArchive;
 
-use std::fs::{File};
+use std::fs::{ File };
 
-use crate::schema::{CompanyfactsCommonStockSharesOutstanding, Companyfacts};
+use crate::schema::{ CompanyfactsCommonStockSharesOutstanding, Companyfacts };
 
 
 pub struct HandlerCompanyfactsZip

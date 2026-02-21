@@ -7,6 +7,8 @@ use crate::database::database_connection::DatabaseConnection;
 use crate::database::table_security_exchange::TableSecurityExchange;
 use crate::database::table_security_ticker::TableSecurityTicker;
 
+use crate::{ log_info };
+
 
 pub struct HandlerSecurityExchangeTicker
 {
@@ -31,7 +33,6 @@ impl HandlerSecurityExchangeTicker
 
 	pub async fn synchronize(
 		&self,
-		log_level: u8,
 		security_cik: &str,
 		tickers: &Vec<String>,
 		exchanges: &Vec<String>,
@@ -47,10 +48,7 @@ impl HandlerSecurityExchangeTicker
 		// 1. Fetch existing tickers
 		let existing_rows: Vec<MySqlRow> = self.t_security_ticker.read_rows(security_cik).await?;
 
-		if log_level >= 1
-		{
-			println!("\tSynchronizing security tickers..");
-		}
+		log_info!("Synchronizing security tickers..");
 
 		for row in existing_rows
 		{
@@ -76,10 +74,7 @@ impl HandlerSecurityExchangeTicker
 			inserted_ids.push(self.t_security_ticker.create_row(security_cik, ticker).await?);
 		}
 
-		if log_level >= 1
-		{
-			println!("\tSynchronizing security exchanges..");
-		}
+		log_info!("Synchronizing security exchanges..");
 
 		// 2c. Insert exchanges for tickers
 		self.t_security_exchange.create_rows(&inserted_ids, &exchanges).await?;

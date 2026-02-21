@@ -1,10 +1,12 @@
 use std::sync::Arc;
 
 use crate::database::database_connection::DatabaseConnection;
+use crate::schema::CompanyfactsCommonStockSharesOutstanding;
+
+use crate::{ log_info, log_warn };
 use crate::database::table_security_filing_common_stock_shares_outstanding::{
 	TableSecurityFilingCommonStockSharesOutstanding
 };
-use crate::schema::CompanyfactsCommonStockSharesOutstanding;
 
 
 pub struct HandlerSecurityFilingCommonStockSharesOutstanding
@@ -30,14 +32,10 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 
 	pub async fn synchronize(
 		&self,
-		log_level: u8,
 		common_stock_shares_outstanding: &Vec<CompanyfactsCommonStockSharesOutstanding>,
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		if log_level >= 1
-		{
-			println!("\tSynchronizing security common stock shares outstanding..");
-		}
+		log_info!("Synchronizing security common stock shares outstanding..");
 
 		match self.t_security_filing_common_stock_shares_outstanding.create_rows(
 			&common_stock_shares_outstanding,
@@ -48,7 +46,7 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 
 			Err(e) =>
 			{
-				eprintln!("[WARN] Failed to insert into security_filing_common_stock_shares_outstanding: {}", e);
+				log_warn!("[WARN] Failed to insert into security_filing_common_stock_shares_outstanding: {}", e);
 			}
 		}
 
