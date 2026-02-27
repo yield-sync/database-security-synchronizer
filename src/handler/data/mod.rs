@@ -1,3 +1,4 @@
+pub mod handler_sec_submission_file_hash;
 pub mod handler_security;
 pub mod handler_security_exchange_ticker;
 pub mod handler_security_filing;

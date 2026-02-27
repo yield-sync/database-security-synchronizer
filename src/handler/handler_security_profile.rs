@@ -10,6 +10,7 @@ use crate::handler::HandlerSecurityExchangeTicker;
 use crate::handler::HandlerSecurityFilingCommonStockSharesOutstanding;
 use crate::handler::HandlerSecurityFiling;
 use crate::handler::UpdatedSecCompanyfactsAndSubmissions;
+use crate::handler::data::handler_sec_submission_file_hash::HandlerSecSubmissionFileHash;
 use crate::schema::SubmissionsData;
 use crate::schema::Companyfacts;
 
@@ -47,6 +48,8 @@ impl HandlerSecurityProfile
 		let db_connection = Arc::new(DatabaseConnection::new().await?);
 
 		let t_security = TableSecurity::new(db_connection.clone());
+
+		let handler_sec_submission_file_hash = HandlerSecSubmissionFileHash::new(db_connection.clone());
 
 		let UpdatedSecCompanyfactsAndSubmissions
 		{
@@ -179,6 +182,8 @@ impl HandlerSecurityProfile
 					&companyfacts.common_stock_shares_outstanding,
 				).await?;
 			}
+
+			handler_sec_submission_file_hash.synchronize(&s_file_name.to_string(), &s_hash.to_string()).await?;
 		}
 
 		db_connection.close().await?;

@@ -1,5 +1,6 @@
 pub mod database_connection;
 pub mod table_asset;
+pub mod table_sec_submission_file_hash;
 pub mod table_security;
 pub mod table_security_ticker;
 pub mod table_security_exchange;
