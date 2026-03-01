@@ -72,7 +72,8 @@ impl HandlerSecurityProfile
 				continue;
 			}
 
-			log_info!("📣 Synchronizing submissions/{}", s_file_name);
+			log_info!("------------------------------------------------------------");
+			log_info!("Synchronizing submissions/{}", s_file_name);
 			log_info!("CIK: {}", submissions_data.cik);
 			log_info!("Name: {}", submissions_data.name);
 			log_info!("Tickers: {}", submissions_data.tickers.join(", "));
@@ -85,13 +86,13 @@ impl HandlerSecurityProfile
 			{
 				if !handler_sec_submission_file_hash.hash_exists(&s_file_name, &s_hash).await?
 				{
-					log_debug!("Hash not found in database..");
+					log_debug!("Hash NOT found in table sec_submission_file_hash");
 
 					synchronize_required = true;
 				}
 				else
 				{
-					log_debug!("Hash found in database..");
+					log_debug!("Hash found in table sec_submission_file_hash");
 				}
 			}
 			else
@@ -101,12 +102,12 @@ impl HandlerSecurityProfile
 
 			if !synchronize_required
 			{
-				log_info!("[SKIP] Synchronize not required. Skipping..");
+				log_info!("[SKIP] Synchronize not required. Skipping");
 
 				continue;
 			}
 
-			log_info!("Synchronize required..");
+			log_info!("Synchronize required");
 
 			(HandlerSecurity::new(db_connection.clone())).synchronize(
 				&SynchronizeSecurity {
@@ -146,7 +147,7 @@ impl HandlerSecurityProfile
 			}
 			else
 			{
-				log_warn!("{} not found in companyfacts.zip file not found. Skipping..", &s_file_name);
+				log_warn!("{} not found in companyfacts.zip file not found. Skipping", &s_file_name);
 
 				None
 			};
@@ -163,7 +164,7 @@ impl HandlerSecurityProfile
 
 		db_connection.close().await?;
 
-		log_info!("Security profiles built successfully.");
+		log_info!("Security profiles built successfully");
 
 		Ok(())
 	}

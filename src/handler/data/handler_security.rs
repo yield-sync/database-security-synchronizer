@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::database::database_connection::DatabaseConnection;
 use crate::database::table_security::TableSecurity;
 
-use crate::{ log_info };
+use crate::{ log_debug };
 use crate::database::table_asset::{ AssetRow, TableAsset };
 
 
@@ -57,11 +57,11 @@ impl HandlerSecurity
 		synchronize_security: &SynchronizeSecurity
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		log_info!("Synchronizing security..");
+		log_debug!("Synchronizing security..");
 
 		if let Some(_) = self.t_security.get_by_cik(&synchronize_security.cik).await?
 		{
-			log_info!("Security found in database. Updating it now..");
+			log_debug!("Security found in database. Updating it now..");
 
 			self.t_security.update_row(
 				&synchronize_security.cik,
@@ -80,7 +80,7 @@ impl HandlerSecurity
 		}
 		else
 		{
-			log_info!("Security not found in database. Inserting it now..");
+			log_debug!("Security not found in database. Inserting it now..");
 
 			// Insert into database
 			let asset: AssetRow = self.t_asset.create_row(

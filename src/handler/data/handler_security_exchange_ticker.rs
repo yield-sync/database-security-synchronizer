@@ -4,7 +4,7 @@ use sqlx::Row;
 use crate::database::database_connection::DatabaseConnection;
 use crate::database::table_security_exchange_ticker::TableSecurityExchangeTicker;
 
-use crate::{ log_debug, log_info, log_superdebug };
+use crate::{ log_debug, log_superdebug };
 
 
 pub struct HandlerSecurityExchangeTicker
@@ -33,7 +33,7 @@ impl HandlerSecurityExchangeTicker
 		tickers: &Vec<String>,
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		log_info!("Synchronizing security_exchange_ticker..");
+		log_debug!("Synchronizing security_exchange_ticker..");
 
 		if tickers.len() != exchanges.len()
 		{

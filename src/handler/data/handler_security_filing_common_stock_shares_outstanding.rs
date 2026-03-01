@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::database::database_connection::DatabaseConnection;
 use crate::schema::CompanyfactsCommonStockSharesOutstanding;
 
-use crate::{ log_info, log_warn };
+use crate::{ log_debug, log_warn };
 use crate::database::table_security_filing_common_stock_shares_outstanding::{
 	TableSecurityFilingCommonStockSharesOutstanding
 };
@@ -35,7 +35,7 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 		common_stock_shares_outstanding: &Vec<CompanyfactsCommonStockSharesOutstanding>,
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		log_info!("Synchronizing security_filing_common_stock_shares_outstanding..");
+		log_debug!("Synchronizing security_filing_common_stock_shares_outstanding..");
 
 		match self.t_security_filing_common_stock_shares_outstanding.create_rows(
 			&common_stock_shares_outstanding,

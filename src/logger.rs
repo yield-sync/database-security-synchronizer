@@ -18,6 +18,19 @@ pub enum LogLevel
 
 impl LogLevel
 {
+	fn color_code(self) -> &'static str
+	{
+		match self
+		{
+			LogLevel::Error => "\x1b[31m", // Red
+			LogLevel::Warn => "\x1b[33m", // Yellow
+			LogLevel::Info => "\x1b[34m", // Blue
+			LogLevel::Debug => "\x1b[36m", // Cyan
+			LogLevel::Superdebug => "\x1b[35m", // Magenta
+			LogLevel::Ultradebug => "\x1b[90m", // Gray
+		}
+	}
+
 	fn weight(self) -> u8
 	{
 		match self
@@ -59,16 +72,20 @@ static LOG_LEVEL: Lazy<RwLock<LogLevel>> = Lazy::new(
 );
 
 
-fn log(prefix: &str, level: LogLevel, args: Arguments)
-{
-	let current = *LOG_LEVEL.read().unwrap();
-
-
-	if current.weight() >= level.weight()
+	fn log(prefix: &str, level: LogLevel, args: Arguments)
 	{
-		println!("{} {}", prefix, args);
+		let current = *LOG_LEVEL.read().unwrap();
+
+		if current.weight() >= level.weight()
+		{
+			let color = level.color_code();
+			let reset = "\x1b[0m";
+
+			// This colors the prefix only.
+			// Move {reset} to the end if you want the whole line colored.
+			println!("{}{} {} {}", color, prefix, reset, args);
+		}
 	}
-}
 
 
 // ---------- public helpers ----------
