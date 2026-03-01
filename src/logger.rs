@@ -26,8 +26,8 @@ impl LogLevel
 			LogLevel::Warn => "\x1b[33m", // Yellow
 			LogLevel::Info => "\x1b[34m", // Blue
 			LogLevel::Debug => "\x1b[36m", // Cyan
-			LogLevel::Superdebug => "\x1b[35m", // Magenta
-			LogLevel::Ultradebug => "\x1b[90m", // Gray
+			LogLevel::Superdebug => "\x1b[36m", // Cyan
+			LogLevel::Ultradebug => "\x1b[36m", // Cyan
 		}
 	}
 
