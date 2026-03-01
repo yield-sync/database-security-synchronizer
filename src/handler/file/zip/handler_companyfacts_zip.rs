@@ -47,7 +47,9 @@ impl HandlerCompanyfactsZip
 	{
 		let json_submission: Value = self.load_json_from_file(file_name)?;
 
-		let shares_outstanding: Vec<CompanyfactsCommonStockSharesOutstanding> = json_submission.get("facts").and_then(
+		let common_stock_shares_outstanding: Vec<CompanyfactsCommonStockSharesOutstanding> = json_submission.get(
+			"facts"
+		).and_then(
 			|v| v.get("us-gaap")
 		).and_then(
 			|v| v.get("CommonStockSharesOutstanding")
@@ -77,7 +79,7 @@ impl HandlerCompanyfactsZip
 
 		Ok(
 			Companyfacts {
-				common_stock_shares_outstanding: shares_outstanding,
+				common_stock_shares_outstanding,
 			}
 		)
 	}
