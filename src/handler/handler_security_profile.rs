@@ -13,7 +13,7 @@ use crate::handler::data::handler_sec_submission_file_hash::HandlerSecSubmission
 use crate::schema::SubmissionsData;
 use crate::schema::Companyfacts;
 
-use crate::{ log_debug, log_error, log_info, log_warn };
+use crate::{ log_debug, log_error, log_info, log_superdebug, log_warn };
 use crate::handler::{ HandlerSecurity, SynchronizeSecurity };
 
 
@@ -58,13 +58,13 @@ impl HandlerSecurityProfile
 
 		for (s_file_name, s_hash) in submissions_file_names_to_hashs
 		{
-			log_debug!("Processing submissions/{}", s_file_name);
+			log_superdebug!("Processing submissions/{}", s_file_name);
 
 			let submissions_data: SubmissionsData = handler_submissions_zip.extract_submissions_data(&s_file_name)?;
 
 			if submissions_data.tickers.is_empty()
 			{
-				log_debug!(
+				log_superdebug!(
 					"No tickers found in submissions/{}, skipping..",
 					s_file_name
 				);
@@ -72,8 +72,7 @@ impl HandlerSecurityProfile
 				continue;
 			}
 
-			log_info!("");
-			log_info!("Synchronizing submissions/{}", s_file_name);
+			log_info!("📣 Synchronizing submissions/{}", s_file_name);
 			log_info!("CIK: {}", submissions_data.cik);
 			log_info!("Name: {}", submissions_data.name);
 			log_info!("Tickers: {}", submissions_data.tickers.join(", "));
@@ -86,7 +85,13 @@ impl HandlerSecurityProfile
 			{
 				if !handler_sec_submission_file_hash.hash_exists(&s_file_name, &s_hash).await?
 				{
+					log_debug!("Hash not found in database..");
+
 					synchronize_required = true;
+				}
+				else
+				{
+					log_debug!("Hash found in database..");
 				}
 			}
 			else
@@ -123,11 +128,11 @@ impl HandlerSecurityProfile
 
 			if let Err(e) = HandlerSecurityExchangeTicker::new(db_connection.clone()).synchronize(
 				&submissions_data.cik,
-				&submissions_data.tickers,
 				&submissions_data.exchanges,
+				&submissions_data.tickers,
 			).await
 			{
-				log_error!("Failed to synchronize tickers and exchanges: {}", e);
+				log_error!("Failed to synchronize security_exchange_ticker with error: {}", e);
 			}
 
 			(HandlerSecurityFiling::new(db_connection.clone())).synchronize(

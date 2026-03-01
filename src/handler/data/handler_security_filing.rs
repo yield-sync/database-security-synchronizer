@@ -4,7 +4,7 @@ use crate::database::database_connection::DatabaseConnection;
 
 use crate::database::table_security_filing::{ TableSecurityFiling, TableSecurityFilingInsertionError };
 
-use crate::{ log_info, log_warn };
+use crate::{ log_info, log_superdebug };
 use crate::schema::{ SubmissionsDataFilings };
 
 
@@ -33,7 +33,7 @@ impl HandlerSecurityFiling
 		filings: &Vec<SubmissionsDataFilings>,
 	) -> Result<Vec<i64>, Box<dyn std::error::Error>>
 	{
-		log_info!("Synchronizing security filings..");
+		log_info!("Synchronizing security_filings..");
 
 		for f in filings
 		{
@@ -50,9 +50,7 @@ impl HandlerSecurityFiling
 
 				Err(TableSecurityFilingInsertionError::DuplicateEntryError) =>
 				{
-					log_warn!(
-						"[WARN] TableSecurityFiling Duplicate entry error"
-					);
+					log_superdebug!("[WRN] TableSecurityFiling Duplicate entry error");
 				}
 
 				Err(TableSecurityFilingInsertionError::Database(e)) =>

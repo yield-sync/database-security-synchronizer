@@ -35,7 +35,7 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 		common_stock_shares_outstanding: &Vec<CompanyfactsCommonStockSharesOutstanding>,
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		log_info!("Synchronizing security common stock shares outstanding..");
+		log_info!("Synchronizing security_filing_common_stock_shares_outstanding..");
 
 		match self.t_security_filing_common_stock_shares_outstanding.create_rows(
 			&common_stock_shares_outstanding,
@@ -46,7 +46,7 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 
 			Err(e) =>
 			{
-				log_warn!("[WARN] Failed to insert into security_filing_common_stock_shares_outstanding: {}", e);
+				log_warn!("Failed to insert into security_filing_common_stock_shares_outstanding: {}", e);
 			}
 		}
 
