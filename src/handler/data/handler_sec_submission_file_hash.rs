@@ -28,10 +28,26 @@ impl HandlerSecSubmissionFileHash
 
 	pub async fn synchronize(&self, s_file_name: &str, s_hash: &str,) -> Result<Vec<i64>, Box<dyn std::error::Error>>
 	{
-		log_info!("Synchronizing table_sec_submission_file_hash {} {}..", s_file_name, s_hash);
+		log_info!("Synchronizing table_sec_submission_file_hash..");
+
+		log_debug!("s_file_name: {} s_hash: {}", s_file_name, s_hash);
 
 		self.table_sec_submission_file_hash.create_row(&s_file_name, &s_hash).await?;
 
 		Ok(vec![])
+	}
+
+	pub async fn hash_exists(&self, s_file_name: &str, s_hash: &str,) -> Result<bool, Box<dyn std::error::Error>>
+	{
+		let result = self.table_sec_submission_file_hash.read_row(&s_file_name, &s_hash).await?;
+
+		if let Some(_) = result
+		{
+			Ok(true)
+		}
+		else
+		{
+			Ok(false)
+		}
 	}
 }

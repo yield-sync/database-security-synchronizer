@@ -1,5 +1,4 @@
 use reqwest::blocking::Client;
-use std::fs;
 use std::io;
 use std::path::PathBuf;
 
@@ -7,16 +6,14 @@ use std::fs::{ File, Metadata };
 use std::time::{ Duration, SystemTime };
 
 use crate::handler::file::zip::HandlerCompanyfactsZip;
-use crate::handler::file::zip::SubmissionsZipHandler;
+use crate::handler::file::zip::HandlerSubmissionsZip;
 
 use crate::{ log_info };
 
 
 pub struct UpdatedSecCompanyfactsAndSubmissions
 {
-	pub submissions_zip_handler: SubmissionsZipHandler,
-	pub handler_previous_submissions_zip: Option<SubmissionsZipHandler>,
-
+	pub handler_submissions_zip: HandlerSubmissionsZip,
 	pub handler_companyfacts_zip: HandlerCompanyfactsZip,
 }
 
@@ -32,7 +29,6 @@ pub struct HandlerApiSec
 impl HandlerApiSec
 {
 	pub const COMPANY_FACTS_ZIP: &'static str = "companyfacts.zip";
-	pub const PREVIOUS_SUBMISSIONS_ZIP: &'static str = "previous_submissions.zip";
 	pub const SUBMISSIONS_ZIP: &'static str = "submissions.zip";
 
 	const SECONDS_24_HOURS: Duration = Duration::from_secs(24 * 60 * 60);
@@ -53,26 +49,6 @@ impl HandlerApiSec
 		}
 	}
 
-
-	fn archive_current_submissions_zip(&self) -> Result<(), Box<dyn std::error::Error>>
-	{
-		let current_path: PathBuf = self.path_dir_tmp.join(Self::SUBMISSIONS_ZIP);
-
-		let previous_path: PathBuf = self.path_dir_tmp.join(Self::PREVIOUS_SUBMISSIONS_ZIP);
-
-		if !current_path.exists()
-		{
-			log_info!("No current submissions.zip exists. Skipping archive process..");
-
-			return Ok(());
-		}
-
-		log_info!("Renaming submissions.zip to previous_submissions.zip..");
-
-		fs::copy(&current_path, &previous_path)?;
-
-		Ok(())
-	}
 
 	/**
 	* @visibility: Internal
@@ -220,13 +196,6 @@ impl HandlerApiSec
 
 		if self.should_download_submissions_zip()?
 		{
-			let path_current_submissions_zip: PathBuf = self.path_dir_tmp.join(Self::SUBMISSIONS_ZIP);
-
-			if path_current_submissions_zip.exists()
-			{
-				self.archive_current_submissions_zip()?;
-			}
-
 			self.download_submissions_zip()?;
 		}
 		else
@@ -240,29 +209,13 @@ impl HandlerApiSec
 
 		log_info!("{} exists, initializing a HandlerCompanyfactsZip for it..", Self::SUBMISSIONS_ZIP);
 
-		let submissions_zip_handler = SubmissionsZipHandler::new(self.path_dir_tmp.join(Self::SUBMISSIONS_ZIP))?;
-
-		let handler_previous_submissions_zip = {
-			let previous_path = self.path_dir_tmp.join(Self::PREVIOUS_SUBMISSIONS_ZIP);
-
-			if previous_path.exists()
-			{
-				log_info!("{} exists, initializing a SubmissionsZipHandler for it..", Self::PREVIOUS_SUBMISSIONS_ZIP);
-				Some(SubmissionsZipHandler::new(previous_path)?)
-			}
-			else
-			{
-				log_info!("{} does not exist", Self::PREVIOUS_SUBMISSIONS_ZIP);
-				None
-			}
-		};
+		let handler_submissions_zip = HandlerSubmissionsZip::new(self.path_dir_tmp.join(Self::SUBMISSIONS_ZIP))?;
 
 		Ok(
 			UpdatedSecCompanyfactsAndSubmissions
 			{
 				handler_companyfacts_zip,
-				submissions_zip_handler,
-				handler_previous_submissions_zip,
+				handler_submissions_zip,
 			}
 		)
 	}
