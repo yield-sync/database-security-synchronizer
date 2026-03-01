@@ -13,7 +13,7 @@ use crate::handler::data::handler_sec_submission_file_hash::HandlerSecSubmission
 use crate::schema::SubmissionsData;
 use crate::schema::Companyfacts;
 
-use crate::{ log_debug, log_error, log_info, log_superdebug, log_warn };
+use crate::{ log_debug, log_ultradebug, log_error, log_info, log_warn };
 use crate::handler::{ HandlerSecurity, SynchronizeSecurity };
 
 
@@ -58,13 +58,13 @@ impl HandlerSecurityProfile
 
 		for (s_file_name, s_hash) in submissions_file_names_to_hashs
 		{
-			log_superdebug!("Processing submissions/{}", s_file_name);
+			log_ultradebug!("Processing submissions/{}", s_file_name);
 
 			let submissions_data: SubmissionsData = handler_submissions_zip.extract_submissions_data(&s_file_name)?;
 
 			if submissions_data.tickers.is_empty()
 			{
-				log_superdebug!(
+				log_ultradebug!(
 					"No tickers found in submissions/{}, skipping..",
 					s_file_name
 				);

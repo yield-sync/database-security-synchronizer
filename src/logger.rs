@@ -12,6 +12,7 @@ pub enum LogLevel
 	Info,
 	Debug,
 	Superdebug,
+	Ultradebug,
 }
 
 
@@ -26,6 +27,7 @@ impl LogLevel
 			LogLevel::Info => 2,
 			LogLevel::Debug => 3,
 			LogLevel::Superdebug => 4,
+			LogLevel::Ultradebug => 5,
 		}
 	}
 
@@ -36,6 +38,7 @@ impl LogLevel
 			"info" => Some(LogLevel::Info),
 			"debug" => Some(LogLevel::Debug),
 			"superdebug" => Some(LogLevel::Superdebug),
+			"ultradebug" => Some(LogLevel::Ultradebug),
 			_ => None,
 		}
 	}
@@ -70,9 +73,14 @@ fn log(prefix: &str, level: LogLevel, args: Arguments)
 
 // ---------- public helpers ----------
 
+pub fn ultradebug(args: Arguments)
+{
+	log("🔧 [UDBG]", LogLevel::Ultradebug, args);
+}
+
 pub fn superdebug(args: Arguments)
 {
-	log("🧰 [SDBG]", LogLevel::Superdebug, args);
+	log("🔧 [SDBG]", LogLevel::Superdebug, args);
 }
 
 pub fn debug(args: Arguments)
@@ -96,6 +104,15 @@ pub fn error(args: Arguments)
 }
 
 // ---------- macros for ergonomic usage ----------
+
+#[macro_export]
+macro_rules! log_ultradebug
+{
+	($($arg:tt)*) =>
+	{
+		$crate::logger::ultradebug(format_args!($($arg)*))
+	};
+}
 
 #[macro_export]
 macro_rules! log_superdebug
