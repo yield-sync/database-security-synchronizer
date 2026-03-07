@@ -7,6 +7,7 @@ use crate::database::database_connection::DatabaseConnection;
 use crate::handler::HandlerApiSec;
 use crate::handler::HandlerSecurityExchangeTicker;
 use crate::handler::HandlerSecurityFilingCommonStockSharesOutstanding;
+use crate::handler::HandlerSecurityFilingEntityCommonStockSharesOutstanding;
 use crate::handler::HandlerSecurityFiling;
 use crate::handler::UpdatedSecCompanyfactsAndSubmissions;
 use crate::handler::data::handler_sec_submission_file_hash::HandlerSecSubmissionFileHash;
@@ -141,22 +142,24 @@ impl HandlerSecurityProfile
 				&submissions_data.filings
 			).await?;
 
-			let companyfacts: Option<Companyfacts> = if handler_companyfacts_zip.file_exists(&s_file_name)
+			if handler_companyfacts_zip.file_exists(&s_file_name)
 			{
-				Some(handler_companyfacts_zip.extract_data(&s_file_name)?)
+				let companyfacts: Option<Companyfacts> = Some(handler_companyfacts_zip.extract_data(&s_file_name)?);
+
+				if let Some(companyfacts) = companyfacts
+				{
+					(HandlerSecurityFilingCommonStockSharesOutstanding::new(db_connection.clone())).synchronize(
+						&companyfacts.common_stock_shares_outstanding,
+					).await?;
+
+					(HandlerSecurityFilingEntityCommonStockSharesOutstanding::new(db_connection.clone())).synchronize(
+						&companyfacts.entity_common_stock_shares_outstanding,
+					).await?;
+				}
 			}
 			else
 			{
-				log_warn!("{} not found in companyfacts.zip file not found. Skipping", &s_file_name);
-
-				None
-			};
-
-			if let Some(companyfacts) = companyfacts
-			{
-				(HandlerSecurityFilingCommonStockSharesOutstanding::new(db_connection.clone())).synchronize(
-					&companyfacts.common_stock_shares_outstanding,
-				).await?;
+				log_warn!("{} not found in companyfacts.zip file not found.", &s_file_name);
 			}
 
 			handler_sec_submission_file_hash.synchronize(&s_file_name.to_string(), &s_hash.to_string()).await?;

@@ -10,6 +10,9 @@ pub use data::handler_security_exchange_ticker::HandlerSecurityExchangeTicker;
 pub use data::handler_security_filing_common_stock_shares_outstanding::{
 	HandlerSecurityFilingCommonStockSharesOutstanding
 };
+pub use data::handler_security_filing_entity_common_stock_shares_outstanding::{
+	HandlerSecurityFilingEntityCommonStockSharesOutstanding
+};
 pub use data::handler_security_filing::HandlerSecurityFiling;
 pub use handler_security_profile::HandlerSecurityProfile;
 pub use handler_time::HandlerTime;
