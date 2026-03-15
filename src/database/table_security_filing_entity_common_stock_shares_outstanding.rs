@@ -6,6 +6,9 @@ use crate::schema::CompanyfactsEntityCommonStockSharesOutstanding;
 use crate::{ log_info, log_debug };
 
 
+const FOREIGN_KEY_NOT_FOUND_ERROR_MSG: &str = "security_filing_accession_number foreign key (key for security_filing) not found";
+
+
 pub enum TableSecurityFilingEntityCommonStockSharesOutstandingInsertionError
 {
 	ForeignKeyNotFoundError,
@@ -95,19 +98,14 @@ impl TableSecurityFilingEntityCommonStockSharesOutstanding
 
 				Err(TableSecurityFilingEntityCommonStockSharesOutstandingInsertionError::ForeignKeyNotFoundError) =>
 				{
-					let error_message = "Foreign key not found";
-
 					if ignore_foreign_key_not_found_error
 					{
-						log_debug!(
-							"[WARN][TableSecurityFilingEntityCommonStockSharesOutstandingInsertionError] {}, Skipping..",
-							error_message
-						);
+						log_debug!("{}, Skipping..", FOREIGN_KEY_NOT_FOUND_ERROR_MSG);
 
 						continue;
 					}
 
-					return Err(error_message.into());
+					return Err(FOREIGN_KEY_NOT_FOUND_ERROR_MSG.into());
 				}
 
 				Err(TableSecurityFilingEntityCommonStockSharesOutstandingInsertionError::Database(e)) =>
