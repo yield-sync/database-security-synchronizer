@@ -112,7 +112,7 @@ impl HandlerSecurityProfile
 
 			log_info!("Synchronize required");
 
-			(HandlerSecurity::new(db_connection.clone())).synchronize(
+			if let Err(e) = HandlerSecurity::new(db_connection.clone()).synchronize(
 				&SynchronizeSecurity {
 					cik: submissions_data.cik.clone(),
 					business_country: submissions_data.business_country,
@@ -128,7 +128,10 @@ impl HandlerSecurityProfile
 					sic: submissions_data.sic,
 					website: submissions_data.website,
 				},
-			).await?;
+			).await
+			{
+				log_error!("Failed to synchronize security with cik {} with error: {}", submissions_data.cik, e);
+			}
 
 			if let Err(e) = HandlerSecurityExchangeTicker::new(db_connection.clone()).synchronize(
 				&submissions_data.cik,
@@ -136,13 +139,24 @@ impl HandlerSecurityProfile
 				&submissions_data.tickers,
 			).await
 			{
-				log_error!("Failed to synchronize security_exchange_ticker with error: {}", e);
+				log_error!(
+					"Failed to synchronize security_exchange_ticker with cik {} with error: {}",
+					submissions_data.cik,
+					e
+				);
 			}
 
-			(HandlerSecurityFiling::new(db_connection.clone())).synchronize(
+			/*
+			* @dev This needs to occur first to ensure that the security_filing records are created before the
+			* security is updated.
+			*/
+			if let Err(e) = HandlerSecurityFiling::new(db_connection.clone()).synchronize(
 				&submissions_data.cik,
 				&submissions_data.filings
-			).await?;
+			).await
+			{
+				log_error!("Failed to synchronize security_filing with cik {} with error: {}", submissions_data.cik, e);
+			}
 
 			if handler_file_companyfacts_zip.file_exists(&s_file_name)
 			{
@@ -150,11 +164,11 @@ impl HandlerSecurityProfile
 
 				if let Some(companyfacts) = companyfacts
 				{
-					(HandlerSecurityFilingCommonStockSharesOutstanding::new(db_connection.clone())).synchronize(
+					HandlerSecurityFilingCommonStockSharesOutstanding::new(db_connection.clone()).synchronize(
 						&companyfacts.common_stock_shares_outstanding,
 					).await?;
 
-					(HandlerSecurityFilingEntityCommonStockSharesOutstanding::new(db_connection.clone())).synchronize(
+					HandlerSecurityFilingEntityCommonStockSharesOutstanding::new(db_connection.clone()).synchronize(
 						&companyfacts.entity_common_stock_shares_outstanding,
 					).await?;
 				}

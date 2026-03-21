@@ -3,7 +3,7 @@ use std::sync::Arc;
 use super::database_connection::DatabaseConnection;
 use crate::schema::CompanyfactsEntityCommonStockSharesOutstanding;
 
-use crate::{ log_info, log_debug };
+use crate::{ log_info, log_warn };
 
 
 const FOREIGN_KEY_NOT_FOUND_ERROR_MSG: &str = "security_filing_accession_number foreign key (key for security_filing) not found";
@@ -100,7 +100,7 @@ impl TableSecurityFilingEntityCommonStockSharesOutstanding
 				{
 					if ignore_foreign_key_not_found_error
 					{
-						log_debug!("{}, Skipping..", FOREIGN_KEY_NOT_FOUND_ERROR_MSG);
+						log_warn!("{}, Skipping..", FOREIGN_KEY_NOT_FOUND_ERROR_MSG);
 
 						continue;
 					}
