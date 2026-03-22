@@ -38,11 +38,13 @@ impl TableSecurityFilingEntityCommonStockSharesOutstanding
 					fp,
 					fy,
 					form,
-					entity_common_stock_shares_outstanding
+					val
 				)
 				VALUES (?, ?, ?, ?, ?, ?, ?)
 			"#
-		).bind(&companyfacts_entity_common_stock_shares_outstanding.security_filing_accession_number).bind(
+		).bind(
+			&companyfacts_entity_common_stock_shares_outstanding.security_filing_accession_number
+		).bind(
 			&companyfacts_entity_common_stock_shares_outstanding.end
 		).bind(
 			&companyfacts_entity_common_stock_shares_outstanding.filed
@@ -53,7 +55,7 @@ impl TableSecurityFilingEntityCommonStockSharesOutstanding
 		).bind(
 			&companyfacts_entity_common_stock_shares_outstanding.form
 		).bind(
-			&companyfacts_entity_common_stock_shares_outstanding.entity_common_stock_shares_outstanding
+			&companyfacts_entity_common_stock_shares_outstanding.val
 		).execute(
 			self.db_connection.pool()
 		).await?;

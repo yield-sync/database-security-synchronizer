@@ -38,11 +38,13 @@ impl TableSecurityFilingCommonStockSharesOutstanding
 					fp,
 					fy,
 					form,
-					common_stock_shares_outstanding
+					val
 				)
 				VALUES (?, ?, ?, ?, ?, ?, ?)
 			"#
-		).bind(&companyfacts_common_stock_shares_outstanding.security_filing_accession_number).bind(
+		).bind(
+			&companyfacts_common_stock_shares_outstanding.security_filing_accession_number
+		).bind(
 			&companyfacts_common_stock_shares_outstanding.end
 		).bind(
 			&companyfacts_common_stock_shares_outstanding.filed

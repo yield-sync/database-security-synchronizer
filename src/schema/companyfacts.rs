@@ -19,7 +19,7 @@ pub struct CompanyfactsEntityCommonStockSharesOutstanding
 	pub fp: String,
 	pub fy: i64,
 	pub form: String,
-	pub entity_common_stock_shares_outstanding: i64,
+	pub val: i64,
 }
 
 #[derive(Debug)]

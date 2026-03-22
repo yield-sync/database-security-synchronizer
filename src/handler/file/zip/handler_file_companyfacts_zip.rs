@@ -41,15 +41,18 @@ impl HandlerFileCompanyfactsZip
 		).map(
 			|arr| {
 				arr.iter().filter_map(|item| {
-					Some(CompanyfactsCommonStockSharesOutstanding {
-						security_filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
-						end: item.get("end")?.as_str()?.to_owned(),
-						filed: item.get("filed")?.as_str()?.to_owned(),
-						fp: item.get("fp")?.as_str()?.to_owned(),
-						fy: item.get("fy")?.as_i64()?,
-						form: item.get("form")?.as_str()?.to_owned(),
-						val: item.get("val")?.as_i64()?,
-					})
+					Some(
+						CompanyfactsCommonStockSharesOutstanding
+						{
+							security_filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
+							end: item.get("end")?.as_str()?.to_owned(),
+							filed: item.get("filed")?.as_str()?.to_owned(),
+							fp: item.get("fp")?.as_str()?.to_owned(),
+							fy: item.get("fy")?.as_i64()?,
+							form: item.get("form")?.as_str()?.to_owned(),
+							val: item.get("val")?.as_i64()?,
+						}
+					)
 				}).collect()
 			}
 		).unwrap_or_default();
@@ -79,15 +82,18 @@ impl HandlerFileCompanyfactsZip
 		).map(
 			|arr| {
 				arr.iter().filter_map(|item| {
-					Some(CompanyfactsEntityCommonStockSharesOutstanding {
-						security_filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
-						end: item.get("end")?.as_str()?.to_owned(),
-						filed: item.get("filed")?.as_str()?.to_owned(),
-						fp: item.get("fp")?.as_str()?.to_owned(),
-						fy: item.get("fy")?.as_i64()?,
-						form: item.get("form")?.as_str()?.to_owned(),
-						entity_common_stock_shares_outstanding: item.get("val")?.as_i64()?,
-					})
+					Some(
+						CompanyfactsEntityCommonStockSharesOutstanding
+						{
+							security_filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
+							end: item.get("end")?.as_str()?.to_owned(),
+							filed: item.get("filed")?.as_str()?.to_owned(),
+							fp: item.get("fp")?.as_str()?.to_owned(),
+							fy: item.get("fy")?.as_i64()?,
+							form: item.get("form")?.as_str()?.to_owned(),
+							val: item.get("val")?.as_i64()?,
+						}
+					)
 				}).collect()
 			}
 		).unwrap_or_default();
