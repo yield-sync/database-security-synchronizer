@@ -335,27 +335,27 @@ impl HandlerFileSubmissionsZip
 	{
 		let json_submission: Value = self.load_json_from_file(file_name)?;
 
-	 	let business = json_submission.get("addresses").and_then(|a| a.get("business"));
-
-		let get_str = |v: Option<&Value>|
-		{
-			v.and_then(|v| v.as_str()).unwrap_or("<unknown>").to_string()
-		};
-
 		let tickers = self.extract_submission_data_tickers(&json_submission)?;
 
 		let exchanges = self.extract_submission_data_exchanges(&json_submission)?;
 
 		let filings = self.extract_submission_data_filings(&json_submission)?;
 
+		let get_str = |v: Option<&Value>|
+		{
+			v.and_then(|v| v.as_str()).unwrap_or("").to_string()
+		};
+
+	 	let business = json_submission.get("addresses").and_then(|a| a.get("business"));
+
 		Ok(
 			SubmissionsData
 			{
-				business_street1: get_str(business.and_then(|m| m.get("street1"))),
-				business_city: get_str(business.and_then(|m| m.get("city"))),
-				business_state: get_str(business.and_then(|m| m.get("stateOrCountry"))),
-				business_country: get_str(business.and_then(|m| m.get("country"))),
-				business_zip: get_str(business.and_then(|m| m.get("zipCode"))),
+				business_street1: get_str(business.and_then(|b| b.get("street1"))),
+				business_city: get_str(business.and_then(|b| b.get("city"))),
+				business_state: get_str(business.and_then(|b| b.get("stateOrCountry"))),
+				business_country: get_str(business.and_then(|b| b.get("country"))),
+				business_zip: get_str(business.and_then(|b| b.get("zipCode"))),
 				cik: get_str(json_submission.get("cik")),
 				description: get_str(json_submission.get("description")),
 				ein: get_str(json_submission.get("ein")),
