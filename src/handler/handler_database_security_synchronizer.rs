@@ -183,7 +183,16 @@ impl HandlerDatabaseSecuritySynchronizer
 				log_warn!("{} not found in companyfacts.zip file not found.", &s_file_name);
 			}
 
-			handler_sec_submission_file_hash.synchronize(&s_file_name.to_string(), &s_hash.to_string()).await?;
+			if let Err(e) = handler_sec_submission_file_hash.synchronize(
+				&s_file_name.to_string(),
+				&s_hash.to_string()
+			).await
+			{
+				log_error!(
+					"Failed to synchronize sec_submission_file_hash with error: {}",
+					e
+				);
+			}
 		}
 
 		db_connection.close().await?;

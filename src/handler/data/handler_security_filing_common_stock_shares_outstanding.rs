@@ -6,7 +6,6 @@ use crate::schema::CompanyfactsCommonStockSharesOutstanding;
 use crate::{ log_debug, log_superdebug, };
 use crate::database::table_security_filing_common_stock_shares_outstanding::{
 	TableSecurityFilingCommonStockSharesOutstanding,
-	TableSecurityFilingCommonStockSharesOutstandingInsertError,
 };
 
 
@@ -52,25 +51,7 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 			}
 			else
 			{
-				match self.t_security_filing_common_stock_shares_outstanding.create_row(&csso).await
-				{
-					Ok(_) => {}
-
-					Err(TableSecurityFilingCommonStockSharesOutstandingInsertError::ForeignKeyNotFoundError) =>
-					{
-						let error_message = format!(
-							"security_filing_accession_number (Foreign key) not found Error: {}",
-							csso.security_filing_accession_number
-						);
-
-						return Err(error_message.into());
-					}
-
-					Err(TableSecurityFilingCommonStockSharesOutstandingInsertError::Uncaught(e)) =>
-					{
-						return Err(e.into());
-					}
-				}
+				self.t_security_filing_common_stock_shares_outstanding.create_row(&csso).await?;
 			}
 		}
 

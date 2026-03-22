@@ -11,12 +11,6 @@ pub struct TableSecurityFilingCommonStockSharesOutstandingRow
 {}
 
 
-pub enum TableSecurityFilingCommonStockSharesOutstandingInsertError
-{
-	ForeignKeyNotFoundError,
-	Uncaught(sqlx::Error),
-}
-
 pub struct TableSecurityFilingCommonStockSharesOutstanding
 {
 	db_connection: Arc<DatabaseConnection>,
@@ -33,9 +27,9 @@ impl TableSecurityFilingCommonStockSharesOutstanding
 	pub async fn create_row(
 		&self,
 		companyfacts_common_stock_shares_outstanding: &CompanyfactsCommonStockSharesOutstanding
-	) -> Result<(), TableSecurityFilingCommonStockSharesOutstandingInsertError>
+	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		match sqlx::query(
+		sqlx::query(
 			r#"
 				INSERT INTO security_filing_common_stock_shares_outstanding (
 					security_filing_accession_number,
@@ -62,21 +56,9 @@ impl TableSecurityFilingCommonStockSharesOutstanding
 			companyfacts_common_stock_shares_outstanding.val
 		).execute(
 			self.db_connection.pool()
-		).await
-		{
-			Ok(_) => Ok(()),
+		).await?;
 
-			Err(e) =>
-			{
-				// Foreign key not found error
-				if e.to_string().contains("error returned from database: 1452")
-				{
-					return Err(TableSecurityFilingCommonStockSharesOutstandingInsertError::ForeignKeyNotFoundError);
-				}
-
-			 	return Err(TableSecurityFilingCommonStockSharesOutstandingInsertError::Uncaught(e));
-			}
-		}
+		Ok(())
 	}
 
 	pub async fn read_row(

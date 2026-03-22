@@ -6,13 +6,12 @@ use crate::schema::CompanyfactsEntityCommonStockSharesOutstanding;
 use crate::{ log_debug, log_superdebug };
 use crate::database::table_security_filing_entity_common_stock_shares_outstanding::{
 	TableSecurityFilingEntityCommonStockSharesOutstanding,
-	TableSecurityFilingEntityCommonStockSharesOutstandingInsertError,
 };
 
 
 pub struct HandlerSecurityFilingEntityCommonStockSharesOutstanding
 {
-	t_s_f_entity_common_stock_shares_outstanding: TableSecurityFilingEntityCommonStockSharesOutstanding,
+	entity_common_stock_shares_outstanding: TableSecurityFilingEntityCommonStockSharesOutstanding,
 }
 
 
@@ -25,7 +24,7 @@ impl HandlerSecurityFilingEntityCommonStockSharesOutstanding
 	{
 		Self
 		{
-			t_s_f_entity_common_stock_shares_outstanding: TableSecurityFilingEntityCommonStockSharesOutstanding::new(
+			entity_common_stock_shares_outstanding: TableSecurityFilingEntityCommonStockSharesOutstanding::new(
 				db_connection.clone()
 			),
 		}
@@ -41,7 +40,7 @@ impl HandlerSecurityFilingEntityCommonStockSharesOutstanding
 		for csso in entity_common_stock_shares_outstanding
 		{
 			// Check if the data is already in the database
-			if let Some(_) = self.t_s_f_entity_common_stock_shares_outstanding.read_row(
+			if let Some(_) = self.entity_common_stock_shares_outstanding.read_row(
 				&csso.security_filing_accession_number
 			).await?
 			{
@@ -52,25 +51,7 @@ impl HandlerSecurityFilingEntityCommonStockSharesOutstanding
 			}
 			else
 			{
-				match self.t_s_f_entity_common_stock_shares_outstanding.create_row(&csso).await
-				{
-					Ok(_) => {}
-
-					Err(TableSecurityFilingEntityCommonStockSharesOutstandingInsertError::ForeignKeyNotFoundError) =>
-					{
-						let error_message = format!(
-							"security_filing_accession_number (Foreign key) not found Error: {}",
-							csso.security_filing_accession_number
-						);
-
-						return Err(error_message.into());
-					}
-
-					Err(TableSecurityFilingEntityCommonStockSharesOutstandingInsertError::Uncaught(e)) =>
-					{
-						return Err(e.into());
-					}
-				}
+				self.entity_common_stock_shares_outstanding.create_row(&csso).await?;
 			}
 		}
 
