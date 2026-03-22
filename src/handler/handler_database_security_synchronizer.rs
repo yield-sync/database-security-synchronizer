@@ -67,10 +67,7 @@ impl HandlerDatabaseSecuritySynchronizer
 
 			if submissions_data.tickers.is_empty()
 			{
-				log_ultradebug!(
-					"No tickers found in submissions/{}, skipping..",
-					s_file_name
-				);
+				log_ultradebug!("No tickers found in submissions/{}, skipping..", s_file_name);
 
 				continue;
 			}
