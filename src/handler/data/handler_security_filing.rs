@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::database::database_connection::DatabaseConnection;
 
-use crate::database::table_security_filing::{ TableSecurityFiling, TableSecurityFilingInsertionError };
+use crate::database::table_security_filing::{ TableSecurityFiling, };
 
 use crate::{ log_debug, log_ultradebug };
 use crate::schema::{ SubmissionsDataFilings };
@@ -28,7 +28,7 @@ impl HandlerSecurityFiling
 	}
 
 	pub async fn synchronize(
-		&self,
+	&self,
 		security_cik: &str,
 		filings: &Vec<SubmissionsDataFilings>,
 	) -> Result<Vec<i64>, Box<dyn std::error::Error>>
@@ -37,27 +37,24 @@ impl HandlerSecurityFiling
 
 		for f in filings
 		{
-			match self.t_security_filing.create_row(
+			if let Some(_) = self.t_security_filing.read_row(&f.accession_number).await?
+			{
+				log_ultradebug!(
+					"Row with accession_number {} already exists in database",
+					f.accession_number
+				);
+
+				continue;
+			}
+
+			self.t_security_filing.create_row(
 				&security_cik,
 				&f.accession_number,
 				&f.form,
 				&f.filing_date,
 				&f.report_date,
 				&f.acceptance,
-			).await
-			{
-				Ok(_) => continue,
-
-				Err(TableSecurityFilingInsertionError::DuplicateEntryError) =>
-				{
-					log_ultradebug!("WARNING: TableSecurityFiling Duplicate entry error");
-				}
-
-				Err(TableSecurityFilingInsertionError::Database(e)) =>
-				{
-					return Err(e.into());
-				}
-			}
+			).await?;
 		}
 
 		Ok(vec![])

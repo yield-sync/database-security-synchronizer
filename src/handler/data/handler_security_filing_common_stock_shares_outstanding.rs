@@ -48,11 +48,11 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 					"Row with security_filing_accession_number {} already exists in database",
 					csso.security_filing_accession_number
 				);
+
+				continue;
 			}
-			else
-			{
-				self.t_security_filing_common_stock_shares_outstanding.create_row(&csso).await?;
-			}
+
+			self.t_security_filing_common_stock_shares_outstanding.create_row(&csso).await?;
 		}
 
 		Ok(())

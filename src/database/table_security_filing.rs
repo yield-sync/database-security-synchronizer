@@ -4,12 +4,13 @@ use chrono::{ NaiveDate, NaiveDateTime };
 
 use super::database_connection::DatabaseConnection;
 
+use sqlx::FromRow;
 
-pub enum TableSecurityFilingInsertionError
-{
-	DuplicateEntryError,
-	Database(sqlx::Error),
-}
+
+#[derive(Debug, FromRow)]
+pub struct RowSecurityFiling
+{}
+
 
 pub struct TableSecurityFiling
 {
@@ -32,9 +33,9 @@ impl TableSecurityFiling
 		filing_date: &NaiveDate,
 		report_date: &Option<NaiveDate>,
 		acceptance: &NaiveDateTime,
-	) -> Result<(), TableSecurityFilingInsertionError>
+	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		match sqlx::query(
+		sqlx::query(
 			r#"
 				INSERT INTO security_filing (security_cik, accession_number, form, filing_date, report_date, acceptance)
 				VALUES (?, ?, ?, ?, ?, ?)
@@ -53,20 +54,24 @@ impl TableSecurityFiling
 			acceptance
 		).execute(
 			self.db_connection.pool()
-		).await
-		{
-			Ok(_) => Ok(()),
+		).await?;
 
-			Err(e) =>
-			{
-				// Catch duplicate entry error
-				if e.to_string().contains("error returned from database: 1062")
-				{
-					return Err(TableSecurityFilingInsertionError::DuplicateEntryError);
-				}
-
-			 	return Err(TableSecurityFilingInsertionError::Database(e));
-			}
-		}
+		Ok(())
 	}
+
+	pub async fn read_row(
+			&self,
+			accession_number: &str,
+		) -> Result<Option<RowSecurityFiling>, Box<dyn std::error::Error>>
+		{
+			let existing_row = sqlx::query_as::<_, RowSecurityFiling>(
+				"SELECT * FROM security_filing WHERE accession_number = ?"
+			).bind(
+				accession_number
+			).fetch_optional(
+				self.db_connection.pool()
+			).await?;
+
+			Ok(existing_row)
+		}
 }
