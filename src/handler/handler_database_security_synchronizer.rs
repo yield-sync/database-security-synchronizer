@@ -127,7 +127,7 @@ impl HandlerDatabaseSecuritySynchronizer
 				},
 			).await
 			{
-				log_error!("Failed to synchronize security with error: {}", e);
+				log_error!("Failed to synchronize security: {}", e);
 			}
 
 			if let Err(e) = HandlerSecurityExchangeTicker::new(db_connection.clone()).synchronize(
@@ -136,7 +136,7 @@ impl HandlerDatabaseSecuritySynchronizer
 				&submissions_data.tickers,
 			).await
 			{
-				log_error!("Failed to synchronize security_exchange_ticker with error: {}", e);
+				log_error!("Failed to synchronize security_exchange_ticker: {}", e);
 			}
 
 			if let Err(e) = HandlerSecurityFiling::new(db_connection.clone()).synchronize(
@@ -159,10 +159,7 @@ impl HandlerDatabaseSecuritySynchronizer
 						&companyfacts.common_stock_shares_outstanding,
 					).await
 					{
-						log_error!(
-							"Failed to synchronize security_filing_common_stock_shares_outstanding with error: {}",
-							e
-						);
+						log_error!("Failed to synchronize security_filing_common_stock_shares_outstanding: {}", e);
 					}
 
 					if let Err(e) = HandlerSecurityFilingEntityCommonStockSharesOutstanding::new(
@@ -172,7 +169,7 @@ impl HandlerDatabaseSecuritySynchronizer
 					).await
 					{
 						log_error!(
-							"Failed to synchronize security_filing_entity_common_stock_shares_outstanding with error: {}",
+							"Failed to synchronize security_filing_entity_common_stock_shares_outstanding: {}",
 							e
 						);
 					}
@@ -188,10 +185,7 @@ impl HandlerDatabaseSecuritySynchronizer
 				&s_hash.to_string()
 			).await
 			{
-				log_error!(
-					"Failed to synchronize sec_submission_file_hash with error: {}",
-					e
-				);
+				log_error!("Failed to synchronize sec_submission_file_hash: {}", e);
 			}
 		}
 
