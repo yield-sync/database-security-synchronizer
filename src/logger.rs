@@ -92,12 +92,12 @@ fn log(prefix: &str, level: LogLevel, args: Arguments)
 
 pub fn ultradebug(args: Arguments)
 {
-	log("🔧 [UDBG]", LogLevel::Ultradebug, args);
+	log("🔧 [UDB]", LogLevel::Ultradebug, args);
 }
 
 pub fn superdebug(args: Arguments)
 {
-	log("🔧 [SDBG]", LogLevel::Superdebug, args);
+	log("🔧 [SDB]", LogLevel::Superdebug, args);
 }
 
 pub fn debug(args: Arguments)
