@@ -7,7 +7,7 @@ use sqlx::FromRow;
 
 
 #[derive(Debug, FromRow)]
-pub struct TableSecurityFilingEntityCommonStockSharesOutstandingRow
+pub struct RowSecurityFilingEntityCommonStockSharesOutstanding
 {}
 
 
@@ -64,9 +64,9 @@ impl TableSecurityFilingEntityCommonStockSharesOutstanding
 	pub async fn read_row(
 		&self,
 		security_filing_accession_number: &str,
-	) -> Result<Option<TableSecurityFilingEntityCommonStockSharesOutstandingRow>, Box<dyn std::error::Error>>
+	) -> Result<Option<RowSecurityFilingEntityCommonStockSharesOutstanding>, Box<dyn std::error::Error>>
 	{
-		let existing_row = sqlx::query_as::<_, TableSecurityFilingEntityCommonStockSharesOutstandingRow>(
+		let existing_row = sqlx::query_as::<_, RowSecurityFilingEntityCommonStockSharesOutstanding>(
 			"SELECT * FROM security_filing_entity_common_stock_shares_outstanding WHERE security_filing_accession_number = ?"
 		).bind(
 			security_filing_accession_number
