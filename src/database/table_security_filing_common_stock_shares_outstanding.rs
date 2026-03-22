@@ -3,16 +3,18 @@ use std::sync::Arc;
 use super::database_connection::DatabaseConnection;
 use crate::schema::CompanyfactsCommonStockSharesOutstanding;
 
-use crate::{ log_info, log_warn };
+use sqlx::FromRow;
 
 
-const FOREIGN_KEY_NOT_FOUND_ERROR_MSG: &str = "security_filing_accession_number foreign key (key for security_filing) not found";
+#[derive(Debug, FromRow)]
+pub struct TableSecurityFilingCommonStockSharesOutstandingRow
+{}
 
 
-pub enum TableSecurityFilingCommonStockSharesOutstandingInsertionError
+pub enum TableSecurityFilingCommonStockSharesOutstandingInsertError
 {
 	ForeignKeyNotFoundError,
-	Database(sqlx::Error),
+	Uncaught(sqlx::Error),
 }
 
 pub struct TableSecurityFilingCommonStockSharesOutstanding
@@ -30,14 +32,8 @@ impl TableSecurityFilingCommonStockSharesOutstanding
 
 	pub async fn create_row(
 		&self,
-		security_filing_accession_number: &str,
-		end: &str,
-		filed: &str,
-		fp: &str,
-		fy: &i64,
-		form: &str,
-		common_stock_shares_outstanding: &i64,
-	) -> Result<(), TableSecurityFilingCommonStockSharesOutstandingInsertionError>
+		companyfacts_common_stock_shares_outstanding: &CompanyfactsCommonStockSharesOutstanding
+	) -> Result<(), TableSecurityFilingCommonStockSharesOutstandingInsertError>
 	{
 		match sqlx::query(
 			r#"
@@ -52,8 +48,18 @@ impl TableSecurityFilingCommonStockSharesOutstanding
 				)
 				VALUES (?, ?, ?, ?, ?, ?, ?)
 			"#
-		).bind(security_filing_accession_number).bind(end).bind(filed).bind(fp).bind(fy).bind(form).bind(
-			common_stock_shares_outstanding
+		).bind(&companyfacts_common_stock_shares_outstanding.security_filing_accession_number).bind(
+			&companyfacts_common_stock_shares_outstanding.end
+		).bind(
+			&companyfacts_common_stock_shares_outstanding.filed
+		).bind(
+			&companyfacts_common_stock_shares_outstanding.fp
+		).bind(
+			&companyfacts_common_stock_shares_outstanding.fy
+		).bind(
+			&companyfacts_common_stock_shares_outstanding.form
+		).bind(
+			companyfacts_common_stock_shares_outstanding.val
 		).execute(
 			self.db_connection.pool()
 		).await
@@ -65,58 +71,27 @@ impl TableSecurityFilingCommonStockSharesOutstanding
 				// Foreign key not found error
 				if e.to_string().contains("error returned from database: 1452")
 				{
-					return Err(TableSecurityFilingCommonStockSharesOutstandingInsertionError::ForeignKeyNotFoundError);
+					return Err(TableSecurityFilingCommonStockSharesOutstandingInsertError::ForeignKeyNotFoundError);
 				}
 
-			 	return Err(TableSecurityFilingCommonStockSharesOutstandingInsertionError::Database(e));
+			 	return Err(TableSecurityFilingCommonStockSharesOutstandingInsertError::Uncaught(e));
 			}
 		}
 	}
 
-	pub async fn create_rows(
+	pub async fn read_row(
 		&self,
-		companyfacts_common_stock_shares_outstanding: &Vec<CompanyfactsCommonStockSharesOutstanding>,
-		ignore_foreign_key_not_found_error: bool,
-	) -> Result<(), Box<dyn std::error::Error>>
+		security_filing_accession_number: &str,
+	) -> Result<Option<TableSecurityFilingCommonStockSharesOutstandingRow>, Box<dyn std::error::Error>>
 	{
-		log_info!(
-			"Inserting into security_filing_common_stock_shares_outstanding. projected row count: {}",
-			companyfacts_common_stock_shares_outstanding.len()
-		);
+		let existing_row = sqlx::query_as::<_, TableSecurityFilingCommonStockSharesOutstandingRow>(
+			"SELECT * FROM security_filing_common_stock_shares_outstanding WHERE security_filing_accession_number = ?"
+		).bind(
+			security_filing_accession_number
+		).fetch_optional(
+			self.db_connection.pool()
+		).await?;
 
-		for ccsso in companyfacts_common_stock_shares_outstanding
-		{
-			match self.create_row(
-				&ccsso.security_filing_accession_number,
-				&ccsso.end,
-				&ccsso.filed,
-				&ccsso.fp,
-				&ccsso.fy,
-				&ccsso.form,
-				&ccsso.common_stock_shares_outstanding,
-			).await
-			{
-				Ok(_) => continue,
-
-				Err(TableSecurityFilingCommonStockSharesOutstandingInsertionError::ForeignKeyNotFoundError) =>
-				{
-					if ignore_foreign_key_not_found_error
-					{
-						log_warn!("{}, Skipping..", FOREIGN_KEY_NOT_FOUND_ERROR_MSG);
-
-						continue;
-					}
-
-					return Err(FOREIGN_KEY_NOT_FOUND_ERROR_MSG.into());
-				}
-
-				Err(TableSecurityFilingCommonStockSharesOutstandingInsertionError::Database(e)) =>
-				{
-					return Err(Box::new(e));
-				}
-			}
-		}
-
-		Ok(())
+		Ok(existing_row)
 	}
 }

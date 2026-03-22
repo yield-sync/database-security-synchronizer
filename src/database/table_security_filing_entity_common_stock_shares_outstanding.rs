@@ -3,16 +3,17 @@ use std::sync::Arc;
 use super::database_connection::DatabaseConnection;
 use crate::schema::CompanyfactsEntityCommonStockSharesOutstanding;
 
-use crate::{ log_info, log_warn };
+use sqlx::FromRow;
 
 
-const FOREIGN_KEY_NOT_FOUND_ERROR_MSG: &str = "security_filing_accession_number foreign key (key for security_filing) not found";
+#[derive(Debug, FromRow)]
+pub struct TableSecurityFilingEntityCommonStockSharesOutstandingRow
+{}
 
-
-pub enum TableSecurityFilingEntityCommonStockSharesOutstandingInsertionError
+pub enum TableSecurityFilingEntityCommonStockSharesOutstandingInsertError
 {
 	ForeignKeyNotFoundError,
-	Database(sqlx::Error),
+	Uncaught(sqlx::Error),
 }
 
 pub struct TableSecurityFilingEntityCommonStockSharesOutstanding
@@ -31,7 +32,7 @@ impl TableSecurityFilingEntityCommonStockSharesOutstanding
 	pub async fn create_row(
 		&self,
 		companyfacts_entity_common_stock_shares_outstanding: &CompanyfactsEntityCommonStockSharesOutstanding,
-	) -> Result<(), TableSecurityFilingEntityCommonStockSharesOutstandingInsertionError>
+	) -> Result<(), TableSecurityFilingEntityCommonStockSharesOutstandingInsertError>
 	{
 		match sqlx::query(
 			r#"
@@ -70,51 +71,28 @@ impl TableSecurityFilingEntityCommonStockSharesOutstanding
 				if e.to_string().contains("error returned from database: 1452")
 				{
 					return Err(
-						TableSecurityFilingEntityCommonStockSharesOutstandingInsertionError::ForeignKeyNotFoundError
+						TableSecurityFilingEntityCommonStockSharesOutstandingInsertError::ForeignKeyNotFoundError
 					);
 				}
 
-			 	return Err(TableSecurityFilingEntityCommonStockSharesOutstandingInsertionError::Database(e));
+			 	return Err(TableSecurityFilingEntityCommonStockSharesOutstandingInsertError::Uncaught(e));
 			}
 		}
 	}
 
-	pub async fn create_rows(
+	pub async fn read_row(
 		&self,
-		companyfacts_entity_common_stock_shares_outstandings: &Vec<CompanyfactsEntityCommonStockSharesOutstanding>,
-		ignore_foreign_key_not_found_error: bool,
-	) -> Result<(), Box<dyn std::error::Error>>
+		security_filing_accession_number: &str,
+	) -> Result<Option<TableSecurityFilingEntityCommonStockSharesOutstandingRow>, Box<dyn std::error::Error>>
 	{
-		log_info!(
-			"Inserting into security_filing_entity_common_stock_shares_outstanding. projected row count: {}",
-			companyfacts_entity_common_stock_shares_outstandings.len()
-		);
+		let existing_row = sqlx::query_as::<_, TableSecurityFilingEntityCommonStockSharesOutstandingRow>(
+			"SELECT * FROM security_filing_entity_common_stock_shares_outstanding WHERE security_filing_accession_number = ?"
+		).bind(
+			security_filing_accession_number
+		).fetch_optional(
+			self.db_connection.pool()
+		).await?;
 
-		for cecsso in companyfacts_entity_common_stock_shares_outstandings
-		{
-			match self.create_row(&cecsso).await
-			{
-				Ok(_) => continue,
-
-				Err(TableSecurityFilingEntityCommonStockSharesOutstandingInsertionError::ForeignKeyNotFoundError) =>
-				{
-					if ignore_foreign_key_not_found_error
-					{
-						log_warn!("{}, Skipping..", FOREIGN_KEY_NOT_FOUND_ERROR_MSG);
-
-						continue;
-					}
-
-					return Err(FOREIGN_KEY_NOT_FOUND_ERROR_MSG.into());
-				}
-
-				Err(TableSecurityFilingEntityCommonStockSharesOutstandingInsertionError::Database(e)) =>
-				{
-					return Err(Box::new(e));
-				}
-			}
-		}
-
-		Ok(())
+		Ok(existing_row)
 	}
 }

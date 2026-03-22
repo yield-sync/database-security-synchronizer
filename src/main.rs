@@ -9,7 +9,7 @@ use tokio::time::sleep;
 
 use chrono::{ Local };
 
-use crate::handler::HandlerSecurityProfile;
+use crate::handler::HandlerDatabaseSecuritySynchronizer;
 use crate::handler::HandlerTime;
 use crate::handler::handler_time::Seconds;
 
@@ -36,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 
 	let args: Args = Args::parse();
 
-	let handler_security_profile: HandlerSecurityProfile = HandlerSecurityProfile::new();
+	let handler_security_profile = HandlerDatabaseSecuritySynchronizer::new();
 
 	if args.run_now
 	{

@@ -18,11 +18,11 @@ use crate::{ log_debug, log_ultradebug, log_error, log_info, log_warn };
 use crate::handler::{ HandlerSecurity, SynchronizeSecurity };
 
 
-pub struct HandlerSecurityProfile
+pub struct HandlerDatabaseSecuritySynchronizer
 {}
 
 
-impl HandlerSecurityProfile
+impl HandlerDatabaseSecuritySynchronizer
 {
 	/**
 	* @visibility: Public
@@ -130,7 +130,7 @@ impl HandlerSecurityProfile
 				},
 			).await
 			{
-				log_error!("Failed to synchronize security with cik {} with error: {}", submissions_data.cik, e);
+				log_error!("Failed to synchronize security with error: {}", e);
 			}
 
 			if let Err(e) = HandlerSecurityExchangeTicker::new(db_connection.clone()).synchronize(
@@ -139,23 +139,15 @@ impl HandlerSecurityProfile
 				&submissions_data.tickers,
 			).await
 			{
-				log_error!(
-					"Failed to synchronize security_exchange_ticker with cik {} with error: {}",
-					submissions_data.cik,
-					e
-				);
+				log_error!("Failed to synchronize security_exchange_ticker with error: {}", e);
 			}
 
-			/*
-			* @dev This needs to occur first to ensure that the security_filing records are created before the
-			* security is updated.
-			*/
 			if let Err(e) = HandlerSecurityFiling::new(db_connection.clone()).synchronize(
 				&submissions_data.cik,
 				&submissions_data.filings
 			).await
 			{
-				log_error!("Failed to synchronize security_filing with cik {} with error: {}", submissions_data.cik, e);
+				log_error!("Failed to synchronize security_filing with error: {}", e);
 			}
 
 			if handler_file_companyfacts_zip.file_exists(&s_file_name)
@@ -164,13 +156,29 @@ impl HandlerSecurityProfile
 
 				if let Some(companyfacts) = companyfacts
 				{
-					HandlerSecurityFilingCommonStockSharesOutstanding::new(db_connection.clone()).synchronize(
+					if let Err(e) = HandlerSecurityFilingCommonStockSharesOutstanding::new(
+						db_connection.clone()
+					).synchronize(
 						&companyfacts.common_stock_shares_outstanding,
-					).await?;
+					).await
+					{
+						log_error!(
+							"Failed to synchronize security_filing_common_stock_shares_outstanding with error: {}",
+							e
+						);
+					}
 
-					HandlerSecurityFilingEntityCommonStockSharesOutstanding::new(db_connection.clone()).synchronize(
+					if let Err(e) = HandlerSecurityFilingEntityCommonStockSharesOutstanding::new(
+						db_connection.clone()
+					).synchronize(
 						&companyfacts.entity_common_stock_shares_outstanding,
-					).await?;
+					).await
+					{
+						log_error!(
+							"Failed to synchronize security_filing_entity_common_stock_shares_outstanding with error: {}",
+							e
+						);
+					}
 				}
 			}
 			else

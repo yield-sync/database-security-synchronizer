@@ -1,7 +1,7 @@
 pub mod file;
 pub mod api;
 pub mod data;
-pub mod handler_security_profile;
+pub mod handler_database_security_synchronizer;
 pub mod handler_time;
 
 pub use api::handler_api_sec::{ HandlerApiSec, UpdatedSecCompanyfactsAndSubmissions };
@@ -14,5 +14,5 @@ pub use data::handler_security_filing_entity_common_stock_shares_outstanding::{
 	HandlerSecurityFilingEntityCommonStockSharesOutstanding
 };
 pub use data::handler_security_filing::HandlerSecurityFiling;
-pub use handler_security_profile::HandlerSecurityProfile;
+pub use handler_database_security_synchronizer::HandlerDatabaseSecuritySynchronizer;
 pub use handler_time::HandlerTime;
