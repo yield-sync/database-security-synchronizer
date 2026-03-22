@@ -2,17 +2,17 @@ use chrono::{ Local };
 
 use std::sync::Arc;
 
-use crate::database::table_security::TableSecurity;
 use crate::database::database_connection::DatabaseConnection;
+use crate::database::table_security::TableSecurity;
 use crate::handler::HandlerApiSec;
+use crate::handler::UpdatedSecCompanyfactsAndSubmissions;
 use crate::handler::HandlerSecurityExchangeTicker;
+use crate::handler::HandlerSecurityFiling;
 use crate::handler::HandlerSecurityFilingCommonStockSharesOutstanding;
 use crate::handler::HandlerSecurityFilingEntityCommonStockSharesOutstanding;
-use crate::handler::HandlerSecurityFiling;
-use crate::handler::UpdatedSecCompanyfactsAndSubmissions;
 use crate::handler::data::handler_sec_submission_file_hash::HandlerSecSubmissionFileHash;
-use crate::schema::SubmissionsData;
 use crate::schema::Companyfacts;
+use crate::schema::SubmissionsData;
 
 use crate::{ log_debug, log_ultradebug, log_error, log_info, log_warn };
 use crate::handler::{ HandlerSecurity, SynchronizeSecurity };
