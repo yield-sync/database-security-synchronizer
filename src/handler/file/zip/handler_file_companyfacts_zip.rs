@@ -6,8 +6,8 @@ use std::fs::{ File };
 
 use crate::schema::{
 	Companyfacts,
-	CompanyfactsCommonStockSharesOutstanding,
-	CompanyfactsEntityCommonStockSharesOutstanding,
+	CommonStockSharesOutstanding,
+	EntityCommonStockSharesOutstanding,
 };
 
 
@@ -22,9 +22,9 @@ impl HandlerFileCompanyfactsZip
 	fn extract_common_stock_shares_outstanding(
 		&mut self,
 		json_submission: &Value
-	) -> Result<Vec<CompanyfactsCommonStockSharesOutstanding>, Box<dyn std::error::Error>>
+	) -> Result<Vec<CommonStockSharesOutstanding>, Box<dyn std::error::Error>>
 	{
-		let common_stock_shares_outstanding: Vec<CompanyfactsCommonStockSharesOutstanding> = json_submission.get(
+		let common_stock_shares_outstanding: Vec<CommonStockSharesOutstanding> = json_submission.get(
 			"facts"
 		).and_then(
 			|v| v.get("us-gaap")
@@ -42,7 +42,7 @@ impl HandlerFileCompanyfactsZip
 			|arr| {
 				arr.iter().filter_map(|item| {
 					Some(
-						CompanyfactsCommonStockSharesOutstanding
+						CommonStockSharesOutstanding
 						{
 							security_filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
 							end: item.get("end")?.as_str()?.to_owned(),
@@ -63,9 +63,9 @@ impl HandlerFileCompanyfactsZip
 	fn extract_entity_common_stock_shares_outstanding(
 		&mut self,
 		json_submission: &Value
-	) -> Result<Vec<CompanyfactsEntityCommonStockSharesOutstanding>, Box<dyn std::error::Error>>
+	) -> Result<Vec<EntityCommonStockSharesOutstanding>, Box<dyn std::error::Error>>
 	{
-		let entity_common_stock_shares_outstanding: Vec<CompanyfactsEntityCommonStockSharesOutstanding> = json_submission.get(
+		let entity_common_stock_shares_outstanding: Vec<EntityCommonStockSharesOutstanding> = json_submission.get(
 			"facts"
 		).and_then(
 			|v| v.get("dei")
@@ -83,7 +83,7 @@ impl HandlerFileCompanyfactsZip
 			|arr| {
 				arr.iter().filter_map(|item| {
 					Some(
-						CompanyfactsEntityCommonStockSharesOutstanding
+						EntityCommonStockSharesOutstanding
 						{
 							security_filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
 							end: item.get("end")?.as_str()?.to_owned(),
@@ -135,13 +135,13 @@ impl HandlerFileCompanyfactsZip
 		let json_submission: Value = self.load_json_from_file(file_name)?;
 
 		let common_stock_shares_outstanding: Vec<
-			CompanyfactsCommonStockSharesOutstanding
+			CommonStockSharesOutstanding
 		> = self.extract_common_stock_shares_outstanding(
 			&json_submission
 		)?;
 
 		let entity_common_stock_shares_outstanding: Vec<
-			CompanyfactsEntityCommonStockSharesOutstanding
+			EntityCommonStockSharesOutstanding
 		> = self.extract_entity_common_stock_shares_outstanding(
 			&json_submission
 		)?;

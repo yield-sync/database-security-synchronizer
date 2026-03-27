@@ -3,8 +3,8 @@ pub mod submissions_data;
 
 pub use companyfacts::{
 	Companyfacts,
-	CompanyfactsCommonStockSharesOutstanding,
-	CompanyfactsEntityCommonStockSharesOutstanding,
+	CommonStockSharesOutstanding,
+	EntityCommonStockSharesOutstanding,
 };
 
 pub use submissions_data::{ SubmissionsData, SubmissionsDataFilings };

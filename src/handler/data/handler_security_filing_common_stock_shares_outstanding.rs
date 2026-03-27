@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::database::database_connection::DatabaseConnection;
-use crate::schema::CompanyfactsCommonStockSharesOutstanding;
+use crate::schema::CommonStockSharesOutstanding;
 
 use crate::{ log_debug, log_superdebug, };
 use crate::database::table_security_filing_common_stock_shares_outstanding::{
@@ -11,7 +11,7 @@ use crate::database::table_security_filing_common_stock_shares_outstanding::{
 
 pub struct HandlerSecurityFilingCommonStockSharesOutstanding
 {
-	t_security_filing_common_stock_shares_outstanding: TableSecurityFilingCommonStockSharesOutstanding,
+	t_s_f_common_stock_shares_outstanding: TableSecurityFilingCommonStockSharesOutstanding,
 }
 
 
@@ -24,7 +24,7 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 	{
 		Self
 		{
-			t_security_filing_common_stock_shares_outstanding: TableSecurityFilingCommonStockSharesOutstanding::new(
+			t_s_f_common_stock_shares_outstanding: TableSecurityFilingCommonStockSharesOutstanding::new(
 				db_connection.clone()
 			),
 		}
@@ -32,7 +32,7 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 
 	pub async fn synchronize(
 		&self,
-		common_stock_shares_outstanding: &Vec<CompanyfactsCommonStockSharesOutstanding>,
+		common_stock_shares_outstanding: &Vec<CommonStockSharesOutstanding>,
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
 		log_debug!("Synchronizing security_filing_common_stock_shares_outstanding..");
@@ -40,7 +40,7 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 		for csso in common_stock_shares_outstanding
 		{
 			// Check if the data is already in the database
-			if let Some(_) = self.t_security_filing_common_stock_shares_outstanding.read_row(
+			if let Some(_) = self.t_s_f_common_stock_shares_outstanding.read_row(
 				&csso.security_filing_accession_number
 			).await?
 			{
@@ -52,7 +52,7 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 				continue;
 			}
 
-			self.t_security_filing_common_stock_shares_outstanding.create_row(&csso).await?;
+			self.t_s_f_common_stock_shares_outstanding.create_row(&csso).await?;
 		}
 
 		Ok(())

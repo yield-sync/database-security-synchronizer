@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub struct CompanyfactsCommonStockSharesOutstanding
+pub struct CommonStockSharesOutstanding
 {
 	pub security_filing_accession_number: String,
 	pub end: String,
@@ -11,7 +11,7 @@ pub struct CompanyfactsCommonStockSharesOutstanding
 }
 
 #[derive(Debug)]
-pub struct CompanyfactsEntityCommonStockSharesOutstanding
+pub struct EntityCommonStockSharesOutstanding
 {
 	pub security_filing_accession_number: String,
 	pub end: String,
@@ -25,6 +25,6 @@ pub struct CompanyfactsEntityCommonStockSharesOutstanding
 #[derive(Debug)]
 pub struct Companyfacts
 {
-	pub common_stock_shares_outstanding: Vec<CompanyfactsCommonStockSharesOutstanding>,
-	pub entity_common_stock_shares_outstanding: Vec<CompanyfactsEntityCommonStockSharesOutstanding>,
+	pub common_stock_shares_outstanding: Vec<CommonStockSharesOutstanding>,
+	pub entity_common_stock_shares_outstanding: Vec<EntityCommonStockSharesOutstanding>,
 }

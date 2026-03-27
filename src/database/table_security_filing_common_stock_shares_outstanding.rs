@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use super::database_connection::DatabaseConnection;
-use crate::schema::CompanyfactsCommonStockSharesOutstanding;
+use crate::schema::CommonStockSharesOutstanding;
 
 use sqlx::FromRow;
 
@@ -26,7 +26,7 @@ impl TableSecurityFilingCommonStockSharesOutstanding
 
 	pub async fn create_row(
 		&self,
-		companyfacts_common_stock_shares_outstanding: &CompanyfactsCommonStockSharesOutstanding
+		common_stock_shares_outstanding: &CommonStockSharesOutstanding
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
 		sqlx::query(
@@ -43,19 +43,19 @@ impl TableSecurityFilingCommonStockSharesOutstanding
 				VALUES (?, ?, ?, ?, ?, ?, ?)
 			"#
 		).bind(
-			&companyfacts_common_stock_shares_outstanding.security_filing_accession_number
+			&common_stock_shares_outstanding.security_filing_accession_number
 		).bind(
-			&companyfacts_common_stock_shares_outstanding.end
+			&common_stock_shares_outstanding.end
 		).bind(
-			&companyfacts_common_stock_shares_outstanding.filed
+			&common_stock_shares_outstanding.filed
 		).bind(
-			&companyfacts_common_stock_shares_outstanding.fp
+			&common_stock_shares_outstanding.fp
 		).bind(
-			&companyfacts_common_stock_shares_outstanding.fy
+			&common_stock_shares_outstanding.fy
 		).bind(
-			&companyfacts_common_stock_shares_outstanding.form
+			&common_stock_shares_outstanding.form
 		).bind(
-			companyfacts_common_stock_shares_outstanding.val
+			common_stock_shares_outstanding.val
 		).execute(
 			self.db_connection.pool()
 		).await?;
