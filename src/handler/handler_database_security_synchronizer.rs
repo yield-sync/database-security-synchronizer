@@ -45,8 +45,6 @@ impl HandlerDatabaseSecuritySynchronizer
 
 		let db_connection = Arc::new(DatabaseConnection::new().await?);
 
-		let t_security = TableSecurity::new(db_connection.clone());
-
 		let handler_sec_submission_file_hash = HandlerSecSubmissionFileHash::new(db_connection.clone());
 
 		let UpdatedSecCompanyfactsAndSubmissions
@@ -57,7 +55,7 @@ impl HandlerDatabaseSecuritySynchronizer
 
 		let submissions_file_names_to_hashs = handler_file_submissions_zip.compute_file_names_to_hashes()?;
 
-		for (s_file_name, s_hash) in submissions_file_names_to_hashs
+		for (s_file_name, s_file_hash) in submissions_file_names_to_hashs
 		{
 			log_ultradebug!("Processing submissions/{}", s_file_name);
 
@@ -82,9 +80,9 @@ impl HandlerDatabaseSecuritySynchronizer
 			let mut synchronize_required: bool = false;
 
 			// Search database for security with cik
-			if let Some(_) = t_security.get_by_cik(&submissions_data.cik).await?
+			if let Some(_) = TableSecurity::new(db_connection.clone()).get_by_cik(&submissions_data.cik).await?
 			{
-				if !handler_sec_submission_file_hash.hash_exists(&s_file_name, &s_hash).await?
+				if !handler_sec_submission_file_hash.hash_exists(&s_file_name, &s_file_hash).await?
 				{
 					log_debug!("Hash NOT found in table sec_submission_file_hash");
 
@@ -182,7 +180,7 @@ impl HandlerDatabaseSecuritySynchronizer
 
 			if let Err(e) = handler_sec_submission_file_hash.synchronize(
 				&s_file_name.to_string(),
-				&s_hash.to_string()
+				&s_file_hash.to_string()
 			).await
 			{
 				log_error!("Failed to synchronize sec_submission_file_hash: {}", e);
