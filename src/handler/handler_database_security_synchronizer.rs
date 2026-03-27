@@ -6,10 +6,10 @@ use crate::database::database_connection::DatabaseConnection;
 use crate::database::table_security::TableSecurity;
 use crate::handler::HandlerApiSec;
 use crate::handler::UpdatedSecCompanyfactsAndSubmissions;
+use crate::handler::HandlerFilingCommonStockSharesOutstanding;
+use crate::handler::HandlerFilingEntityCommonStockSharesOutstanding;
 use crate::handler::HandlerSecurityExchangeTicker;
 use crate::handler::HandlerSecurityFiling;
-use crate::handler::HandlerSecurityFilingCommonStockSharesOutstanding;
-use crate::handler::HandlerSecurityFilingEntityCommonStockSharesOutstanding;
 use crate::handler::data::handler_sec_submission_file_hash::HandlerSecSubmissionFileHash;
 use crate::schema::Companyfacts;
 use crate::schema::SubmissionsData;
@@ -151,23 +151,23 @@ impl HandlerDatabaseSecuritySynchronizer
 
 				if let Some(companyfacts) = companyfacts
 				{
-					if let Err(e) = HandlerSecurityFilingCommonStockSharesOutstanding::new(
+					if let Err(e) = HandlerFilingCommonStockSharesOutstanding::new(
 						db_connection.clone()
 					).synchronize(
 						&companyfacts.common_stock_shares_outstanding,
 					).await
 					{
-						log_error!("Failed to synchronize security_filing_common_stock_shares_outstanding: {}", e);
+						log_error!("Failed to synchronize filing_common_stock_shares_outstanding: {}", e);
 					}
 
-					if let Err(e) = HandlerSecurityFilingEntityCommonStockSharesOutstanding::new(
+					if let Err(e) = HandlerFilingEntityCommonStockSharesOutstanding::new(
 						db_connection.clone()
 					).synchronize(
 						&companyfacts.entity_common_stock_shares_outstanding,
 					).await
 					{
 						log_error!(
-							"Failed to synchronize security_filing_entity_common_stock_shares_outstanding: {}",
+							"Failed to synchronize filing_entity_common_stock_shares_outstanding: {}",
 							e
 						);
 					}

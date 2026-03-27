@@ -11,13 +11,13 @@ pub struct RowSecurityFilingCommonStockSharesOutstanding
 {}
 
 
-pub struct TableSecurityFilingCommonStockSharesOutstanding
+pub struct TableFilingCommonStockSharesOutstanding
 {
 	db_connection: Arc<DatabaseConnection>,
 }
 
 
-impl TableSecurityFilingCommonStockSharesOutstanding
+impl TableFilingCommonStockSharesOutstanding
 {
 	pub fn new(db_connection: Arc<DatabaseConnection>) -> Self
 	{
@@ -31,7 +31,7 @@ impl TableSecurityFilingCommonStockSharesOutstanding
 	{
 		sqlx::query(
 			r#"
-				INSERT INTO security_filing_common_stock_shares_outstanding (
+				INSERT INTO filing_common_stock_shares_outstanding (
 					security_filing_accession_number,
 					end,
 					filed,
@@ -69,7 +69,7 @@ impl TableSecurityFilingCommonStockSharesOutstanding
 	) -> Result<Option<RowSecurityFilingCommonStockSharesOutstanding>, Box<dyn std::error::Error>>
 	{
 		let existing_row = sqlx::query_as::<_, RowSecurityFilingCommonStockSharesOutstanding>(
-			"SELECT * FROM security_filing_common_stock_shares_outstanding WHERE security_filing_accession_number = ?"
+			"SELECT * FROM filing_common_stock_shares_outstanding WHERE security_filing_accession_number = ?"
 		).bind(
 			security_filing_accession_number
 		).fetch_optional(

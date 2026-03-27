@@ -4,18 +4,16 @@ use crate::database::database_connection::DatabaseConnection;
 use crate::schema::EntityCommonStockSharesOutstanding;
 
 use crate::{ log_debug, log_superdebug };
-use crate::database::table_security_filing_entity_common_stock_shares_outstanding::{
-	TableSecurityFilingEntityCommonStockSharesOutstanding,
-};
+use crate::database::table_filing_entity_common_stock_shares_outstanding::TableFilingEntityCommonStockSharesOutstanding;
 
 
-pub struct HandlerSecurityFilingEntityCommonStockSharesOutstanding
+pub struct HandlerFilingEntityCommonStockSharesOutstanding
 {
-	t_s_f_entity_common_stock_shares_outstanding: TableSecurityFilingEntityCommonStockSharesOutstanding,
+	table_filing_entity_common_stock_shares_outstanding: TableFilingEntityCommonStockSharesOutstanding,
 }
 
 
-impl HandlerSecurityFilingEntityCommonStockSharesOutstanding
+impl HandlerFilingEntityCommonStockSharesOutstanding
 {
 	/**
 	* @visibility: Public
@@ -24,7 +22,7 @@ impl HandlerSecurityFilingEntityCommonStockSharesOutstanding
 	{
 		Self
 		{
-			t_s_f_entity_common_stock_shares_outstanding: TableSecurityFilingEntityCommonStockSharesOutstanding::new(
+			table_filing_entity_common_stock_shares_outstanding: TableFilingEntityCommonStockSharesOutstanding::new(
 				db_connection.clone()
 			),
 		}
@@ -35,12 +33,12 @@ impl HandlerSecurityFilingEntityCommonStockSharesOutstanding
 		entity_common_stock_shares_outstanding: &Vec<EntityCommonStockSharesOutstanding>,
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		log_debug!("Synchronizing security_filing_common_stock_shares_outstanding..");
+		log_debug!("Synchronizing filing_common_stock_shares_outstanding..");
 
 		for ecsso in entity_common_stock_shares_outstanding
 		{
 			// Check if the data is already in the database
-			if let Some(_) = self.t_s_f_entity_common_stock_shares_outstanding.read_row(
+			if let Some(_) = self.table_filing_entity_common_stock_shares_outstanding.read_row(
 				&ecsso.security_filing_accession_number
 			).await?
 			{
@@ -52,7 +50,7 @@ impl HandlerSecurityFilingEntityCommonStockSharesOutstanding
 				continue;
 			}
 
-			self.t_s_f_entity_common_stock_shares_outstanding.create_row(&ecsso).await?;
+			self.table_filing_entity_common_stock_shares_outstanding.create_row(&ecsso).await?;
 		}
 
 		Ok(())

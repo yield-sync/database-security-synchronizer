@@ -7,11 +7,11 @@ pub mod handler_time;
 pub use api::handler_api_sec::{ HandlerApiSec, UpdatedSecCompanyfactsAndSubmissions };
 pub use data::handler_security::{ HandlerSecurity, SynchronizeSecurity };
 pub use data::handler_security_exchange_ticker::HandlerSecurityExchangeTicker;
-pub use data::handler_security_filing_common_stock_shares_outstanding::{
-	HandlerSecurityFilingCommonStockSharesOutstanding
+pub use data::handler_filing_common_stock_shares_outstanding::{
+	HandlerFilingCommonStockSharesOutstanding
 };
-pub use data::handler_security_filing_entity_common_stock_shares_outstanding::{
-	HandlerSecurityFilingEntityCommonStockSharesOutstanding
+pub use data::handler_filing_entity_common_stock_shares_outstanding::{
+	HandlerFilingEntityCommonStockSharesOutstanding
 };
 pub use data::handler_security_filing::HandlerSecurityFiling;
 pub use handler_database_security_synchronizer::HandlerDatabaseSecuritySynchronizer;

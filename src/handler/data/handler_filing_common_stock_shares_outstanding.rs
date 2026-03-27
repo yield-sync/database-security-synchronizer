@@ -4,18 +4,16 @@ use crate::database::database_connection::DatabaseConnection;
 use crate::schema::CommonStockSharesOutstanding;
 
 use crate::{ log_debug, log_superdebug, };
-use crate::database::table_security_filing_common_stock_shares_outstanding::{
-	TableSecurityFilingCommonStockSharesOutstanding,
-};
+use crate::database::table_filing_common_stock_shares_outstanding::TableFilingCommonStockSharesOutstanding;
 
 
-pub struct HandlerSecurityFilingCommonStockSharesOutstanding
+pub struct HandlerFilingCommonStockSharesOutstanding
 {
-	t_s_f_common_stock_shares_outstanding: TableSecurityFilingCommonStockSharesOutstanding,
+	table_filing_common_stock_shares_outstanding: TableFilingCommonStockSharesOutstanding,
 }
 
 
-impl HandlerSecurityFilingCommonStockSharesOutstanding
+impl HandlerFilingCommonStockSharesOutstanding
 {
 	/**
 	* @visibility: Public
@@ -24,7 +22,7 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 	{
 		Self
 		{
-			t_s_f_common_stock_shares_outstanding: TableSecurityFilingCommonStockSharesOutstanding::new(
+			table_filing_common_stock_shares_outstanding: TableFilingCommonStockSharesOutstanding::new(
 				db_connection.clone()
 			),
 		}
@@ -35,12 +33,12 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 		common_stock_shares_outstanding: &Vec<CommonStockSharesOutstanding>,
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		log_debug!("Synchronizing security_filing_common_stock_shares_outstanding..");
+		log_debug!("Synchronizing filing_common_stock_shares_outstanding..");
 
 		for csso in common_stock_shares_outstanding
 		{
 			// Check if the data is already in the database
-			if let Some(_) = self.t_s_f_common_stock_shares_outstanding.read_row(
+			if let Some(_) = self.table_filing_common_stock_shares_outstanding.read_row(
 				&csso.security_filing_accession_number
 			).await?
 			{
@@ -52,7 +50,7 @@ impl HandlerSecurityFilingCommonStockSharesOutstanding
 				continue;
 			}
 
-			self.t_s_f_common_stock_shares_outstanding.create_row(&csso).await?;
+			self.table_filing_common_stock_shares_outstanding.create_row(&csso).await?;
 		}
 
 		Ok(())
