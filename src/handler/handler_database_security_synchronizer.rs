@@ -10,6 +10,7 @@ use crate::handler::HandlerFilingCommonStockSharesOutstanding;
 use crate::handler::HandlerFilingEntityCommonStockSharesOutstanding;
 use crate::handler::HandlerSecurityExchangeTicker;
 use crate::handler::HandlerSecurityFiling;
+use crate::handler::data::handler_filing_assets::HandlerFilingAssets;
 use crate::handler::data::handler_sec_submission_file_hash::HandlerSecSubmissionFileHash;
 use crate::schema::Companyfacts;
 use crate::schema::SubmissionsData;
@@ -151,6 +152,15 @@ impl HandlerDatabaseSecuritySynchronizer
 
 				if let Some(companyfacts) = companyfacts
 				{
+					if let Err(e) = HandlerFilingAssets::new(
+						db_connection.clone()
+					).synchronize(
+						&companyfacts.assets,
+					).await
+					{
+						log_error!("Failed to synchronize filing_assets: {}", e);
+					}
+
 					if let Err(e) = HandlerFilingCommonStockSharesOutstanding::new(
 						db_connection.clone()
 					).synchronize(

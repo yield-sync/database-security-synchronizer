@@ -5,6 +5,7 @@ use zip::ZipArchive;
 use std::fs::{ File };
 
 use crate::schema::{
+	Assets,
 	Companyfacts,
 	CommonStockSharesOutstanding,
 	EntityCommonStockSharesOutstanding,
@@ -19,6 +20,44 @@ pub struct HandlerFileCompanyfactsZip
 
 impl HandlerFileCompanyfactsZip
 {
+	fn extract_assets(&mut self, json_submission: &Value) -> Result<Vec<Assets>, Box<dyn std::error::Error>>
+	{
+		let common_stock_shares_outstanding: Vec<Assets> = json_submission.get(
+			"facts"
+		).and_then(
+			|v| v.get("us-gaap")
+		).and_then(
+			|v| v.get("Assets")
+		).and_then(
+			|v| v.get("units")
+		).and_then(
+			|v| v.get("USD")
+		).and_then(
+			|v| v.as_array()
+		).filter(
+			|arr| !arr.is_empty()
+		).map(
+			|arr| {
+				arr.iter().filter_map(|item| {
+					Some(
+						Assets
+						{
+							security_filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
+							end: item.get("end")?.as_str()?.to_owned(),
+							filed: item.get("filed")?.as_str()?.to_owned(),
+							fp: item.get("fp")?.as_str()?.to_owned(),
+							fy: item.get("fy")?.as_i64()?,
+							form: item.get("form")?.as_str()?.to_owned(),
+							val: item.get("val")?.as_i64()?,
+						}
+					)
+				}).collect()
+			}
+		).unwrap_or_default();
+
+		Ok(common_stock_shares_outstanding)
+	}
+
 	fn extract_common_stock_shares_outstanding(
 		&mut self,
 		json_submission: &Value
@@ -134,6 +173,8 @@ impl HandlerFileCompanyfactsZip
 	{
 		let json_submission: Value = self.load_json_from_file(file_name)?;
 
+		let assets: Vec<Assets> = self.extract_assets(&json_submission)?;
+
 		let common_stock_shares_outstanding: Vec<
 			CommonStockSharesOutstanding
 		> = self.extract_common_stock_shares_outstanding(
@@ -148,6 +189,7 @@ impl HandlerFileCompanyfactsZip
 
 		Ok(
 			Companyfacts {
+				assets,
 				common_stock_shares_outstanding,
 				entity_common_stock_shares_outstanding,
 			}

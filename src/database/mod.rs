@@ -1,5 +1,6 @@
 pub mod database_connection;
 pub mod table_asset;
+pub mod table_filing_assets;
 pub mod table_filing_common_stock_shares_outstanding;
 pub mod table_filing_entity_common_stock_shares_outstanding;
 pub mod table_sec_submission_file_hash;
