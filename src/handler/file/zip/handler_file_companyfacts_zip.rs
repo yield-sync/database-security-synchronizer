@@ -22,7 +22,7 @@ impl HandlerFileCompanyfactsZip
 {
 	fn extract_assets(&mut self, json_submission: &Value) -> Result<Vec<Assets>, Box<dyn std::error::Error>>
 	{
-		let common_stock_shares_outstanding: Vec<Assets> = json_submission.get(
+		let assets: Vec<Assets> = json_submission.get(
 			"facts"
 		).and_then(
 			|v| v.get("us-gaap")
@@ -55,7 +55,7 @@ impl HandlerFileCompanyfactsZip
 			}
 		).unwrap_or_default();
 
-		Ok(common_stock_shares_outstanding)
+		Ok(assets)
 	}
 
 	fn extract_common_stock_shares_outstanding(

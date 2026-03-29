@@ -152,9 +152,7 @@ impl HandlerDatabaseSecuritySynchronizer
 
 				if let Some(companyfacts) = companyfacts
 				{
-					if let Err(e) = HandlerFilingAssets::new(
-						db_connection.clone()
-					).synchronize(
+					if let Err(e) = HandlerFilingAssets::new(db_connection.clone()).synchronize(
 						&companyfacts.assets,
 					).await
 					{
