@@ -34,26 +34,20 @@ impl TableFilingEntityCommonStockSharesOutstanding
 				INSERT INTO filing_entity_common_stock_shares_outstanding (
 					security_filing_accession_number,
 					end,
-					filed,
 					fp,
 					fy,
-					form,
 					val
 				)
-				VALUES (?, ?, ?, ?, ?, ?, ?)
+				VALUES (?, ?, ?, ?, ?)
 			"#
 		).bind(
 			&entity_common_stock_shares_outstanding.security_filing_accession_number
 		).bind(
 			&entity_common_stock_shares_outstanding.end
 		).bind(
-			&entity_common_stock_shares_outstanding.filed
-		).bind(
 			&entity_common_stock_shares_outstanding.fp
 		).bind(
 			&entity_common_stock_shares_outstanding.fy
-		).bind(
-			&entity_common_stock_shares_outstanding.form
 		).bind(
 			&entity_common_stock_shares_outstanding.val
 		).execute(

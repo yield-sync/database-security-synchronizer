@@ -3,10 +3,8 @@ pub struct Assets
 {
 	pub security_filing_accession_number: String,
 	pub end: String,
-	pub filed: String,
 	pub fp: String,
 	pub fy: i64,
-	pub form: String,
 	pub val: i64,
 }
 
@@ -15,10 +13,8 @@ pub struct CommonStockSharesOutstanding
 {
 	pub security_filing_accession_number: String,
 	pub end: String,
-	pub filed: String,
 	pub fp: String,
 	pub fy: i64,
-	pub form: String,
 	pub val: i64,
 }
 
@@ -27,10 +23,8 @@ pub struct EntityCommonStockSharesOutstanding
 {
 	pub security_filing_accession_number: String,
 	pub end: String,
-	pub filed: String,
 	pub fp: String,
 	pub fy: i64,
-	pub form: String,
 	pub val: i64,
 }
 

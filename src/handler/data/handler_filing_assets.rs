@@ -33,7 +33,7 @@ impl HandlerFilingAssets
 		for a in assets
 		{
 			// Check if the data is already in the database
-			if let Some(_) = self.table_filing_assets.read_row(&a.security_filing_accession_number).await?
+			if let Some(_) = self.table_filing_assets.read_row(&a.security_filing_accession_number, &a.end).await?
 			{
 				log_superdebug!(
 					"Row with security_filing_accession_number {} already exists in database",

@@ -28,29 +28,17 @@ impl TableFilingAssets
 	{
 		sqlx::query(
 			r#"
-				INSERT INTO filing_assets (
-					security_filing_accession_number,
-					end,
-					filed,
-					fp,
-					fy,
-					form,
-					val
-				)
-				VALUES (?, ?, ?, ?, ?, ?, ?)
+				INSERT INTO filing_assets (security_filing_accession_number, end, fp, fy, val)
+				VALUES (?, ?, ?, ?, ?)
 			"#
 		).bind(
 			&assets.security_filing_accession_number
 		).bind(
 			&assets.end
 		).bind(
-			&assets.filed
-		).bind(
 			&assets.fp
 		).bind(
 			&assets.fy
-		).bind(
-			&assets.form
 		).bind(
 			assets.val
 		).execute(
@@ -63,12 +51,15 @@ impl TableFilingAssets
 	pub async fn read_row(
 		&self,
 		security_filing_accession_number: &str,
+		end: &str,
 	) -> Result<Option<RowFilingAssets>, Box<dyn std::error::Error>>
 	{
 		let existing_row = sqlx::query_as::<_, RowFilingAssets>(
-			"SELECT * FROM filing_assets WHERE security_filing_accession_number = ?"
+			"SELECT * FROM filing_assets WHERE security_filing_accession_number = ? AND end = ?"
 		).bind(
 			security_filing_accession_number
+		).bind(
+			end
 		).fetch_optional(
 			self.db_connection.pool()
 		).await?;
