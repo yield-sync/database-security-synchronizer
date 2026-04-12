@@ -47,6 +47,6 @@ impl HandlerTime
 		let target_local = target_datetime.and_local_timezone(Local).unwrap();
 		let duration_until_target = target_local.signed_duration_since(now);
 
-		return Duration::from_secs(duration_until_target.num_seconds() as u64);
+		return Duration::from_secs(duration_until_target.num_seconds().max(0) as u64);
 	}
 }
