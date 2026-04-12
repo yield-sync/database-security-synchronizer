@@ -1,8 +1,7 @@
-use reqwest::blocking::Client;
-use std::io;
+use reqwest::Client;
 use std::path::PathBuf;
 
-use std::fs::{ File, Metadata };
+use std::fs::{ Metadata };
 use std::time::{ Duration, SystemTime };
 
 use crate::handler::file::zip::HandlerFileCompanyfactsZip;
@@ -42,7 +41,10 @@ impl HandlerApiSec
 	{
 		Self
 		{
-			path_dir_tmp: PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(".tmp"),
+			// @dev use /tmp/handler_api_sec on production but for development set TMP_DIR
+			path_dir_tmp: PathBuf::from(
+				std::env::var("TMP_DIR").unwrap_or_else(|_| "/tmp/handler_api_sec".to_string())
+			),
 			user_agent: "https://www.yieldsync.xyz w3st.io2021@gmail.com",
 			request_url_companyfacts_zip: "https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip",
 			request_url_submissions_zip: "https://www.sec.gov/Archives/edgar/daily-index/bulkdata/submissions.zip",
@@ -54,7 +56,7 @@ impl HandlerApiSec
 	* @visibility: Internal
 	* Download the company facts zip
 	*/
-	fn download_companyfacts_zip(&self) -> Result<(), Box<dyn std::error::Error>>
+	async fn download_companyfacts_zip(&self) -> Result<(), Box<dyn std::error::Error>>
 	{
 		log_info!("Downloading SEC companyfacts.zip..");
 
@@ -63,13 +65,13 @@ impl HandlerApiSec
 
 		let client = Client::builder().user_agent(self.user_agent).build().expect("failed to build reqwest client");
 
-		let mut response = client.get(self.request_url_companyfacts_zip).send()?;
+		let response = client.get(self.request_url_companyfacts_zip).send().await?;
 
 		response.error_for_status_ref()?;
 
-		let mut output: File = File::create(&self.path_dir_tmp.join(Self::COMPANY_FACTS_ZIP))?;
+		let bytes = response.bytes().await?;
 
-		io::copy(&mut response, &mut output)?;
+		std::fs::write(&self.path_dir_tmp.join(Self::COMPANY_FACTS_ZIP), &bytes)?;
 
 		log_info!("Saved to {}", &self.path_dir_tmp.join(Self::COMPANY_FACTS_ZIP).display());
 
@@ -80,7 +82,7 @@ impl HandlerApiSec
 	* @visibility: Internal
 	* Download the submissions zip
 	*/
-	fn download_submissions_zip(&self) -> Result<(), Box<dyn std::error::Error>>
+	async fn download_submissions_zip(&self) -> Result<(), Box<dyn std::error::Error>>
 	{
 		log_info!("Downloading SEC submissions.zip..");
 
@@ -89,13 +91,13 @@ impl HandlerApiSec
 
 		let client = Client::builder().user_agent(self.user_agent).build().expect("failed to build reqwest client");
 
-		let mut response = client.get(self.request_url_submissions_zip).send()?;
+		let response = client.get(self.request_url_submissions_zip).send().await?;
 
 		response.error_for_status_ref()?;
 
-		let mut output: File = File::create(&self.path_dir_tmp.join(Self::SUBMISSIONS_ZIP))?;
+		let bytes = response.bytes().await?;
 
-		io::copy(&mut response, &mut output)?;
+		std::fs::write(&self.path_dir_tmp.join(Self::SUBMISSIONS_ZIP), &bytes)?;
 
 		log_info!("Saved to {}", self.path_dir_tmp.join(Self::SUBMISSIONS_ZIP).display());
 
@@ -187,7 +189,7 @@ impl HandlerApiSec
 	{
 		if self.should_download_companyfacts_zip()?
 		{
-			self.download_companyfacts_zip()?;
+			self.download_companyfacts_zip().await?;
 		}
 		else
 		{
@@ -196,7 +198,7 @@ impl HandlerApiSec
 
 		if self.should_download_submissions_zip()?
 		{
-			self.download_submissions_zip()?;
+			self.download_submissions_zip().await?;
 		}
 		else
 		{
@@ -205,11 +207,15 @@ impl HandlerApiSec
 
 		log_info!("{} exists, initializing a HandlerFileCompanyfactsZip for it..", Self::COMPANY_FACTS_ZIP);
 
-		let handler_file_companyfacts_zip = HandlerFileCompanyfactsZip::new(self.path_dir_tmp.join(Self::COMPANY_FACTS_ZIP))?;
+		let handler_file_companyfacts_zip = HandlerFileCompanyfactsZip::new(
+			self.path_dir_tmp.join(Self::COMPANY_FACTS_ZIP)
+		)?;
 
 		log_info!("{} exists, initializing a HandlerFileSubmissionsZip for it..", Self::SUBMISSIONS_ZIP);
 
-		let handler_file_submissions_zip = HandlerFileSubmissionsZip::new(self.path_dir_tmp.join(Self::SUBMISSIONS_ZIP))?;
+		let handler_file_submissions_zip = HandlerFileSubmissionsZip::new(
+			self.path_dir_tmp.join(Self::SUBMISSIONS_ZIP)
+		)?;
 
 		Ok(
 			UpdatedSecCompanyfactsAndSubmissions
