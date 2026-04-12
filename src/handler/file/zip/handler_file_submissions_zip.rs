@@ -36,10 +36,13 @@ impl HandlerFileSubmissionsZip
 	* @visibility private
 	* @param raw_acceptance {&str} Raw acceptance datetime string
 	*/
-	fn parse_acceptance_datetime(&self, raw_acceptance: &str) -> NaiveDateTime
-	{
-		DateTime::parse_from_rfc3339(raw_acceptance).ok().map(|dt| dt.with_timezone(&Utc).naive_utc()).unwrap()
-	}
+	fn parse_acceptance_datetime(&self, raw_acceptance: &str) -> Result<NaiveDateTime, Box<dyn std::error::Error>>
+{
+    let dt = DateTime::parse_from_rfc3339(raw_acceptance)
+        .map_err(|e| format!("Invalid acceptanceDateTime '{}': {}", raw_acceptance, e))?;
+
+    Ok(dt.with_timezone(&Utc).naive_utc())
+}
 
 	/**
 	* Parse a date string from a JSON submission file inside submissions.zip
@@ -142,7 +145,7 @@ impl HandlerFileSubmissionsZip
 
 			let acceptance_dt = acceptance.get(i).ok_or("Missing acceptanceDateTime")?;
 
-			let acceptance_dt = self.parse_acceptance_datetime(acceptance_dt);
+			let acceptance_dt = self.parse_acceptance_datetime(acceptance_dt)?;
 
 			filings.push(
 				SubmissionsDataFilings
@@ -203,7 +206,7 @@ impl HandlerFileSubmissionsZip
 
 				let acceptance_dt = acceptance.get(i).ok_or("Missing acceptanceDateTime")?;
 
-				let acceptance_dt = self.parse_acceptance_datetime(acceptance_dt);
+				let acceptance_dt = self.parse_acceptance_datetime(acceptance_dt)?;
 
 				filings.push(
 					SubmissionsDataFilings
