@@ -148,37 +148,25 @@ impl HandlerDatabaseSecuritySynchronizer
 
 			if handler_file_companyfacts_zip.file_exists(&s_file_name)
 			{
-				let companyfacts: Option<Companyfacts> = Some(handler_file_companyfacts_zip.extract_data(&s_file_name)?);
+				let companyfacts: Companyfacts = handler_file_companyfacts_zip.extract_data(&s_file_name)?;
 
-				if let Some(companyfacts) = companyfacts
+				if let Err(e) = HandlerFilingAssets::new(db_connection.clone()).synchronize(&companyfacts.assets).await
 				{
-					if let Err(e) = HandlerFilingAssets::new(db_connection.clone()).synchronize(
-						&companyfacts.assets,
-					).await
-					{
-						log_error!("Failed to synchronize filing_assets: {}", e);
-					}
+					log_error!("Failed to synchronize filing_assets: {}", e);
+				}
 
-					if let Err(e) = HandlerFilingCommonStockSharesOutstanding::new(
-						db_connection.clone()
-					).synchronize(
-						&companyfacts.common_stock_shares_outstanding,
-					).await
-					{
-						log_error!("Failed to synchronize filing_common_stock_shares_outstanding: {}", e);
-					}
+				if let Err(e) = HandlerFilingCommonStockSharesOutstanding::new(db_connection.clone()).synchronize(
+					&companyfacts.common_stock_shares_outstanding,
+				).await
+				{
+					log_error!("Failed to synchronize filing_common_stock_shares_outstanding: {}", e);
+				}
 
-					if let Err(e) = HandlerFilingEntityCommonStockSharesOutstanding::new(
-						db_connection.clone()
-					).synchronize(
-						&companyfacts.entity_common_stock_shares_outstanding,
-					).await
-					{
-						log_error!(
-							"Failed to synchronize filing_entity_common_stock_shares_outstanding: {}",
-							e
-						);
-					}
+				if let Err(e) = HandlerFilingEntityCommonStockSharesOutstanding::new(db_connection.clone()).synchronize(
+					&companyfacts.entity_common_stock_shares_outstanding,
+				).await
+				{
+					log_error!("Failed to synchronize filing_entity_common_stock_shares_outstanding: {}", e);
 				}
 			}
 			else
