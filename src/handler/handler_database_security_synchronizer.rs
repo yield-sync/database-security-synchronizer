@@ -171,7 +171,7 @@ impl HandlerDatabaseSecuritySynchronizer
 			}
 			else
 			{
-				log_warn!("{} not found in companyfacts.zip file not found.", &s_file_name);
+				log_warn!("{} not found in companyfacts.zip.", &s_file_name);
 			}
 
 			if let Err(e) = handler_sec_submission_file_hash.synchronize(
