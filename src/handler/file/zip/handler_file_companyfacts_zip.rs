@@ -145,7 +145,7 @@ impl HandlerFileCompanyfactsZip
 	}
 
 	/**
-	* Load JSON from a file inside submissions.zip
+	* Load JSON from a file inside companyfacts.zip
 	*/
 	pub fn load_json_from_file(&mut self, file_name: &str,) -> Result<Value, Box<dyn std::error::Error>>
 	{

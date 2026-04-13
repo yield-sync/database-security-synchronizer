@@ -310,7 +310,7 @@ impl HandlerFileSubmissionsZip
 	/**
 	* Load JSON from a file inside submissions.zip
 	*/
-	pub fn load_json_from_file(&mut self, file_name: &str,) -> Result<Value, Box<dyn std::error::Error>>
+	pub fn load_json_from_file(&mut self, file_name: &str) -> Result<Value, Box<dyn std::error::Error>>
 	{
 		// ZipArchive requires mutable access because reading advances internal cursor
 		let mut zipped_file = self.archive.by_name(file_name)?;

@@ -71,6 +71,11 @@ static LOG_LEVEL: Lazy<RwLock<LogLevel>> = Lazy::new(
 	}
 );
 
+static SUPPRESS_WARNINGS: Lazy<bool> = Lazy::new(||
+{
+    std::env::var("SUPPRESS_WARNINGS").unwrap_or_else(|_| "false".to_string()) == "true"
+});
+
 
 fn log(prefix: &str, level: LogLevel, args: Arguments)
 {
@@ -114,9 +119,7 @@ pub fn warn(args: Arguments)
 {
 	dotenv().ok();
 
-	let suppress_warnings = std::env::var("SUPRESS_WARNINGS").unwrap_or_else(|_| "false".to_string());
-
-	if suppress_warnings == "false"
+	if !*SUPPRESS_WARNINGS
 	{
 		log("🚨 [WRN]", LogLevel::Warn, args);
 	}
