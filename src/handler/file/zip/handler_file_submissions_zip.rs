@@ -118,6 +118,7 @@ impl HandlerFileSubmissionsZip
 		let filing_dates = get_vec(recent_filings.and_then(|v| v.get("filingDate")));
 		let report_dates = get_vec(recent_filings.and_then(|v| v.get("reportDate")));
 		let acceptance = get_vec(recent_filings.and_then(|v| v.get("acceptanceDateTime")));
+		let forms = get_vec(recent_filings.and_then(|v| v.get("form")));
 
 		let filings_len = accession_number.len();
 
@@ -153,7 +154,7 @@ impl HandlerFileSubmissionsZip
 					accession_number: accession_number.get(i).cloned().unwrap_or_default(),
 					filing_date,
 					report_date,
-					form: get_vec(recent_filings.and_then(|v| v.get("form"))).get(i).cloned().unwrap_or_default(),
+					form: forms.get(i).cloned().unwrap_or_default(),
 					acceptance: acceptance_dt
 				}
 			);
