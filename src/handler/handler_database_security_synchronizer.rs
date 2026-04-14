@@ -60,9 +60,18 @@ impl HandlerDatabaseSecuritySynchronizer
 		{
 			log_ultradebug!("Processing submissions/{}", s_file_name);
 
-			let submissions_data: SubmissionsData = handler_file_submissions_zip.extract_submissions_data(
+			let submissions_data: SubmissionsData = match handler_file_submissions_zip.extract_submissions_data(
 				&s_file_name
-			)?;
+			)
+			{
+				Ok(data) => data,
+				Err(e) =>
+				{
+					log_error!("Failed to extract submissions data: {}", e);
+
+					continue;
+				}
+			};
 
 			if submissions_data.tickers.is_empty()
 			{
