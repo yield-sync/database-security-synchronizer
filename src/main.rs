@@ -36,13 +36,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 
 	let args: Args = Args::parse();
 
-	let handler_security_profile = HandlerDatabaseSecuritySynchronizer::new();
+	let handler_database_security_synchronizer = HandlerDatabaseSecuritySynchronizer::new();
 
 	if args.run_now
 	{
 		log_info!("Running task immediately due to --run-now flag");
 
-		if let Err(e) = handler_security_profile.synchronize().await
+		if let Err(e) = handler_database_security_synchronizer.synchronize().await
 		{
 			log_error!("[ERROR] Error during immediate execution: {}", e);
 
@@ -69,7 +69,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 
 		sleep(initial_delay).await;
 
-		if let Err(e) = handler_security_profile.synchronize().await
+		if let Err(e) = handler_database_security_synchronizer.synchronize().await
 		{
 			log_error!("[ERROR] Error during execution: {}", e);
 
