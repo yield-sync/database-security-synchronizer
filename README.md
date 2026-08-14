@@ -5,3 +5,13 @@
 2. After downloading the zips, the handler `companyfacts_handler.rs` should have a function called `process_companyfacts` that opens the `companyfacts.zip` file and `old.companyfacts.zip` and compare each file to see if they have updated or not. If they have, it should update the database with the new information.
 
 3. It should also do the same for `submissions.zip`
+
+## How to Run
+
+### Regular Run
+
+cargo run --release
+
+### Immediate Run
+
+cargo run --release -- --run-now
