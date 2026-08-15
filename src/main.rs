@@ -5,10 +5,12 @@ mod schema;
 
 use clap::Parser;
 use dotenvy::dotenv;
+use std::sync::Arc;
 use tokio::time::sleep;
 
 use chrono::{ Local };
 
+use crate::database::database_connection::DatabaseConnection;
 use crate::handler::HandlerDatabaseSecuritySynchronizer;
 use crate::handler::HandlerTime;
 use crate::handler::handler_time::Seconds;
@@ -36,7 +38,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 
 	let args: Args = Args::parse();
 
-	let handler_database_security_synchronizer = HandlerDatabaseSecuritySynchronizer::new();
+	let db_connection = Arc::new(DatabaseConnection::new().await?);
+
+	let handler_database_security_synchronizer = HandlerDatabaseSecuritySynchronizer::new(db_connection.clone()).await?;
 
 	if args.run_now
 	{
@@ -44,10 +48,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 
 		if let Err(e) = handler_database_security_synchronizer.synchronize().await
 		{
+			db_connection.close().await?;
+
 			log_error!("[ERROR] Error during immediate execution: {}", e);
 
 			return Err(e);
 		}
+
+		db_connection.close().await?;
 
 		log_info!("Immediate execution completed. Exiting now <3");
 
@@ -71,6 +79,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 
 		if let Err(e) = handler_database_security_synchronizer.synchronize().await
 		{
+			db_connection.close().await?;
+
 			log_error!("[ERROR] Error during execution: {}", e);
 
 			return Err(e);
