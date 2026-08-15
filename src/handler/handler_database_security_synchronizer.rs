@@ -46,8 +46,6 @@ impl HandlerDatabaseSecuritySynchronizer
 
 		let db_connection = Arc::new(DatabaseConnection::new().await?);
 
-		let handler_sec_submission_file_hash = HandlerSecSubmissionFileHash::new(db_connection.clone());
-
 		let UpdatedSecCompanyfactsAndSubmissions
 		{
 			mut handler_file_companyfacts_zip,
@@ -88,6 +86,8 @@ impl HandlerDatabaseSecuritySynchronizer
 			log_info!("Exchanges: {}", submissions_data.exchanges.join(", "));
 
 			let mut synchronize_required: bool = false;
+
+			let handler_sec_submission_file_hash = HandlerSecSubmissionFileHash::new(db_connection.clone());
 
 			// Search database for security with cik
 			if let Some(_) = TableSecurity::new(db_connection.clone()).get_by_cik(&submissions_data.cik).await?
