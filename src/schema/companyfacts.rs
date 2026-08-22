@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub struct Assets
 {
-	pub security_filing_accession_number: String,
+	pub filing_accession_number: String,
 	pub end: String,
 	pub fp: String,
 	pub fy: i64,
@@ -11,7 +11,7 @@ pub struct Assets
 #[derive(Debug)]
 pub struct CommonStockSharesOutstanding
 {
-	pub security_filing_accession_number: String,
+	pub filing_accession_number: String,
 	pub end: String,
 	pub fp: String,
 	pub fy: i64,
@@ -21,7 +21,7 @@ pub struct CommonStockSharesOutstanding
 #[derive(Debug)]
 pub struct EntityCommonStockSharesOutstanding
 {
-	pub security_filing_accession_number: String,
+	pub filing_accession_number: String,
 	pub end: String,
 	pub fp: String,
 	pub fy: i64,

@@ -2,19 +2,19 @@ use std::sync::Arc;
 
 use crate::database::database_connection::DatabaseConnection;
 
-use crate::database::table_security_filing::{ TableSecurityFiling, };
+use crate::database::table_filing::{ TableSecurityFiling, };
 
 use crate::{ log_debug, log_ultradebug };
 use crate::schema::{ SubmissionsDataFilings };
 
 
-pub struct HandlerSecurityFiling
+pub struct HandlerFiling
 {
-	t_security_filing: TableSecurityFiling,
+	t_filing: TableSecurityFiling,
 }
 
 
-impl HandlerSecurityFiling
+impl HandlerFiling
 {
 	/**
 	* @visibility: Public
@@ -23,7 +23,7 @@ impl HandlerSecurityFiling
 	{
 		Self
 		{
-			t_security_filing: TableSecurityFiling::new(db_connection.clone()),
+			t_filing: TableSecurityFiling::new(db_connection.clone()),
 		}
 	}
 
@@ -33,11 +33,11 @@ impl HandlerSecurityFiling
 		filings: &Vec<SubmissionsDataFilings>,
 	) -> Result<Vec<i64>, Box<dyn std::error::Error>>
 	{
-		log_debug!("Synchronizing security_filings..");
+		log_debug!("Synchronizing filings..");
 
 		for f in filings
 		{
-			if let Some(_) = self.t_security_filing.read_row(&f.accession_number).await?
+			if let Some(_) = self.t_filing.read_row(&f.accession_number).await?
 			{
 				log_ultradebug!(
 					"Row with accession_number {} already exists in database",
@@ -47,7 +47,7 @@ impl HandlerSecurityFiling
 				continue;
 			}
 
-			self.t_security_filing.create_row(
+			self.t_filing.create_row(
 				&security_cik,
 				&f.accession_number,
 				&f.form,

@@ -39,12 +39,12 @@ impl HandlerFilingCommonStockSharesOutstanding
 		{
 			// Check if the data is already in the database
 			if let Some(_) = self.table_filing_common_stock_shares_outstanding.read_row(
-				&csso.security_filing_accession_number
+				&csso.filing_accession_number
 			).await?
 			{
 				log_superdebug!(
-					"Row with security_filing_accession_number {} already exists in database",
-					csso.security_filing_accession_number
+					"Row with filing_accession_number {} already exists in database",
+					csso.filing_accession_number
 				);
 
 				continue;

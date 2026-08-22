@@ -37,7 +37,7 @@ impl TableSecurityFiling
 	{
 		sqlx::query(
 			r#"
-				INSERT INTO security_filing (security_cik, accession_number, form, filing_date, report_date, acceptance)
+				INSERT INTO filing (security_cik, accession_number, form, filing_date, report_date, acceptance)
 				VALUES (?, ?, ?, ?, ?, ?)
 			"#,
 		).bind(
@@ -65,7 +65,7 @@ impl TableSecurityFiling
 		) -> Result<Option<RowSecurityFiling>, Box<dyn std::error::Error>>
 		{
 			let existing_row = sqlx::query_as::<_, RowSecurityFiling>(
-				"SELECT * FROM security_filing WHERE accession_number = ?"
+				"SELECT * FROM filing WHERE accession_number = ?"
 			).bind(
 				accession_number
 			).fetch_optional(

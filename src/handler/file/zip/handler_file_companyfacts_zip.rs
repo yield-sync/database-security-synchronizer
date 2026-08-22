@@ -42,7 +42,7 @@ impl HandlerFileCompanyfactsZip
 					Some(
 						Assets
 						{
-							security_filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
+							filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
 							end: item.get("end")?.as_str()?.to_owned(),
 							fp: item.get("fp")?.as_str()?.to_owned(),
 							fy: item.get("fy")?.as_i64()?,
@@ -81,7 +81,7 @@ impl HandlerFileCompanyfactsZip
 					Some(
 						CommonStockSharesOutstanding
 						{
-							security_filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
+							filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
 							end: item.get("end")?.as_str()?.to_owned(),
 							fp: item.get("fp")?.as_str()?.to_owned(),
 							fy: item.get("fy")?.as_i64()?,
@@ -120,7 +120,7 @@ impl HandlerFileCompanyfactsZip
 					Some(
 						EntityCommonStockSharesOutstanding
 						{
-							security_filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
+							filing_accession_number: item.get("accn")?.as_str()?.to_owned(),
 							end: item.get("end")?.as_str()?.to_owned(),
 							fp: item.get("fp")?.as_str()?.to_owned(),
 							fy: item.get("fy")?.as_i64()?,

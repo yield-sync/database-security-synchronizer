@@ -9,7 +9,7 @@ use crate::handler::UpdatedSecCompanyfactsAndSubmissions;
 use crate::handler::HandlerFilingCommonStockSharesOutstanding;
 use crate::handler::HandlerFilingEntityCommonStockSharesOutstanding;
 use crate::handler::HandlerSecurityExchangeTicker;
-use crate::handler::HandlerSecurityFiling;
+use crate::handler::HandlerFiling;
 use crate::handler::data::handler_filing_assets::HandlerFilingAssets;
 use crate::handler::data::handler_sec_submission_file_hash::HandlerSecSubmissionFileHash;
 use crate::schema::Companyfacts;
@@ -28,7 +28,7 @@ pub struct HandlerDatabaseSecuritySynchronizer
 	h_sec_submission_file_hash: HandlerSecSubmissionFileHash,
 	h_security: HandlerSecurity,
 	h_security_exchange_ticker: HandlerSecurityExchangeTicker,
-	h_security_filing: HandlerSecurityFiling,
+	h_filing: HandlerFiling,
 	t_security: TableSecurity
 }
 
@@ -54,7 +54,7 @@ impl HandlerDatabaseSecuritySynchronizer
 				),
 				h_security: HandlerSecurity::new(db_connection.clone()),
 				h_security_exchange_ticker: HandlerSecurityExchangeTicker::new(db_connection.clone()),
-				h_security_filing: HandlerSecurityFiling::new(db_connection.clone()),
+				h_filing: HandlerFiling::new(db_connection.clone()),
 				t_security: TableSecurity::new(db_connection.clone()),
 			}
 		)
@@ -161,12 +161,9 @@ impl HandlerDatabaseSecuritySynchronizer
 				log_error!("Failed to synchronize security_exchange_ticker: {}", e);
 			}
 
-			if let Err(e) = self.h_security_filing.synchronize(
-				&submissions_data.cik,
-				&submissions_data.filings
-			).await
+			if let Err(e) = self.h_filing.synchronize(&submissions_data.cik, &submissions_data.filings).await
 			{
-				log_error!("Failed to synchronize security_filing with error: {}", e);
+				log_error!("Failed to synchronize filing with error: {}", e);
 			}
 
 			if handler_file_companyfacts_zip.file_exists(&submission_file_hash)

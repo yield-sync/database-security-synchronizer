@@ -32,7 +32,7 @@ impl TableFilingCommonStockSharesOutstanding
 		sqlx::query(
 			r#"
 				INSERT INTO filing_common_stock_shares_outstanding (
-					security_filing_accession_number,
+					filing_accession_number,
 					end,
 					fp,
 					fy,
@@ -41,7 +41,7 @@ impl TableFilingCommonStockSharesOutstanding
 				VALUES (?, ?, ?, ?, ?)
 			"#
 		).bind(
-			&common_stock_shares_outstanding.security_filing_accession_number
+			&common_stock_shares_outstanding.filing_accession_number
 		).bind(
 			&common_stock_shares_outstanding.end
 		).bind(
@@ -59,13 +59,13 @@ impl TableFilingCommonStockSharesOutstanding
 
 	pub async fn read_row(
 		&self,
-		security_filing_accession_number: &str,
+		filing_accession_number: &str,
 	) -> Result<Option<RowFilingCommonStockSharesOutstanding>, Box<dyn std::error::Error>>
 	{
 		let existing_row = sqlx::query_as::<_, RowFilingCommonStockSharesOutstanding>(
-			"SELECT * FROM filing_common_stock_shares_outstanding WHERE security_filing_accession_number = ?"
+			"SELECT * FROM filing_common_stock_shares_outstanding WHERE filing_accession_number = ?"
 		).bind(
-			security_filing_accession_number
+			filing_accession_number
 		).fetch_optional(
 			self.db_connection.pool()
 		).await?;
