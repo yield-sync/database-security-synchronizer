@@ -166,9 +166,9 @@ impl HandlerDatabaseSecuritySynchronizer
 				log_error!("Failed to synchronize filing with error: {}", e);
 			}
 
-			if handler_file_companyfacts_zip.file_exists(&submission_file_hash)
+			if handler_file_companyfacts_zip.file_exists(&submission_file_name)
 			{
-				let companyfacts: Companyfacts = handler_file_companyfacts_zip.extract_data(&submission_file_hash)?;
+				let companyfacts: Companyfacts = handler_file_companyfacts_zip.extract_data(&submission_file_name)?;
 
 				if let Err(e) = self.h_filing_assets.synchronize(&companyfacts.assets).await
 				{
