@@ -57,9 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 
 		db_connection.close().await?;
 
-		log_info!("Immediate execution completed. Exiting now <3");
-
-		return Ok(());
+		log_info!("Immediate execution completed.");
 	}
 
 	let time_handler = HandlerTime::new();

@@ -18,4 +18,4 @@ RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/
 COPY --from=builder /app/target/release/database-security-initializer .
 
 # Run at container startup, NOT build time
-CMD ["./database-security-initializer"]
+CMD ["./database-security-initializer", "--run-now"]
