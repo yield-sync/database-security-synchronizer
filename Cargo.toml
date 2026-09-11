@@ -1,5 +1,5 @@
 [package]
-name = "security-profile-builder"
+name = "database-security-synchronizer"
 version = "0.1.0"
 edition = "2021"
 
