@@ -15,7 +15,7 @@ WORKDIR /app
 # Install runtime dependencies (important for Rust + TLS)
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/target/release/database-security-initializer .
+COPY --from=builder /app/target/release/database-security-synchronizer .
 
 # Run at container startup, NOT build time
-CMD ["./database-security-initializer", "--run-now"]
+CMD ["./database-security-synchronizer", "--run-now"]

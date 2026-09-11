@@ -60,11 +60,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 		log_info!("Immediate execution completed.");
 	}
 
-	let time_handler = HandlerTime::new();
-
 	loop
 	{
-		let initial_delay: Seconds = time_handler.calculate_seconds_until_next_4am();
+		let initial_delay: Seconds = HandlerTime::new().calculate_seconds_until_next_4am();
 
 		log_info!(
 			"[INFO] Calculated time until next 4am execution: {}h {}m {}s",
