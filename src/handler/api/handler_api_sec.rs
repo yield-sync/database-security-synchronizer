@@ -129,7 +129,7 @@ impl HandlerApiSec
 
 		if age > Self::SECONDS_24_HOURS
 		{
-			log_info!("companyfacts.zip is old. Redownload needed.");
+			log_info!("companyfacts.zip is {} seconds old. Redownload needed.", age.as_secs());
 
 			return Ok(true);
 		}
