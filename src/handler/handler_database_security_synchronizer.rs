@@ -98,6 +98,13 @@ impl HandlerDatabaseSecuritySynchronizer
 				continue;
 			}
 
+			if submissions_data.exchanges.iter().any(|exchange| exchange.eq_ignore_ascii_case("OTC"))
+			{
+				log_ultradebug!("OTC exchange not supported for submissions/{}, skipping..", submission_file_name);
+
+				continue;
+			}
+
 			log_info!("------------------------------------------------------------");
 			log_info!("Synchronizing submissions/{}", submission_file_name);
 			log_info!("CIK: {}", submissions_data.cik);
