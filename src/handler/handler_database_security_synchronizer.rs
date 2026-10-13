@@ -131,7 +131,7 @@ impl HandlerDatabaseSecuritySynchronizer
 
 			if !synchronize_required
 			{
-				log_info!("[SKIP] Synchronize not required. Skipping");
+				log_info!("[SKIP] Synchronize not required");
 
 				continue;
 			}
