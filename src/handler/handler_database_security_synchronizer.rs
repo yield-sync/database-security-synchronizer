@@ -37,6 +37,24 @@ pub struct HandlerDatabaseSecuritySynchronizer
 impl HandlerDatabaseSecuritySynchronizer
 {
 	/**
+	* @visibility: Private
+	*/
+	fn _normalize_phone(phone: &str) -> Option<String>
+	{
+		let digits: String = phone.chars().filter(|c| c.is_ascii_digit()).collect();
+
+		if digits.is_empty()
+		{
+			None
+		}
+		else
+		{
+			Some(digits)
+		}
+	}
+
+
+	/**
 	* @visibility: Public
 	*/
 	pub async fn new(db_connection: Arc<DatabaseConnection>) -> Result<Self, Box<dyn std::error::Error>>
@@ -60,7 +78,6 @@ impl HandlerDatabaseSecuritySynchronizer
 			}
 		)
 	}
-
 
 	/**
 	* Run Creating Security Profile tasks
@@ -158,7 +175,7 @@ impl HandlerDatabaseSecuritySynchronizer
 				ein: submissions_data.ein,
 				entity_type: submissions_data.entity_type,
 				name: submissions_data.name,
-				phone: submissions_data.phone,
+				phone: Self::_normalize_phone(&submissions_data.phone).unwrap_or_default(),
 				sic: submissions_data.sic,
 				website: submissions_data.website,
 			};
