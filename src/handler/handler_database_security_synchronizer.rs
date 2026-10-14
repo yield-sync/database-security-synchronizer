@@ -1,5 +1,6 @@
 use chrono::{ Local };
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::database::database_connection::DatabaseConnection;
@@ -74,9 +75,16 @@ impl HandlerDatabaseSecuritySynchronizer
 			mut handler_file_submissions_zip,
 		} = self.h_api_sec.get_updated_companyfacts_and_submissions().await?;
 
-		for (submission_file_name, submission_file_hash) in handler_file_submissions_zip.compute_file_names_to_hashes()?
+		let file_names_to_hashes: HashMap<String, String> = handler_file_submissions_zip.compute_file_names_to_hashes()?;
+
+		let total_files: usize = file_names_to_hashes.len();
+
+		log_info!("Processing {} files..", total_files);
+
+		for (index, (submission_file_name, submission_file_hash)) in file_names_to_hashes.into_iter().enumerate()
 		{
-			log_ultradebug!("Processing file submissions/{}", submission_file_name);
+			let current: usize = index + 1;
+			let percent_complete: f64 = (current as f64 / total_files as f64) * 100.0;
 
 			let submissions_data: SubmissionsData = match handler_file_submissions_zip.extract_submissions_data(
 				&submission_file_name
@@ -100,6 +108,7 @@ impl HandlerDatabaseSecuritySynchronizer
 
 			log_info!("------------------------------------------------------------");
 			log_info!("Synchronizing submissions/{}", submission_file_name);
+			log_info!("{:.2}% Complete - ({}/{})", percent_complete, current, total_files);
 			log_info!("CIK: {}", submissions_data.cik);
 			log_info!("Name: {}", submissions_data.name);
 			log_info!("Tickers: {}", submissions_data.tickers.join(", "));
