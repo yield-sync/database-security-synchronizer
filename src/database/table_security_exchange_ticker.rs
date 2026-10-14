@@ -56,7 +56,12 @@ impl TableSecurityExchangeTicker
 		ticker: &str,
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		sqlx::query("INSERT INTO security_exchange_ticker (security_cik, exchange, ticker) VALUES (?, ?, ?)").bind(
+		sqlx::query(
+			r#"
+				INSERT INTO security_exchange_ticker (security_cik, EXCHANGE, ticker)
+				VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE security_cik = VALUES(security_cik)
+			"#
+		).bind(
 			security_cik
 		).bind(
 			exchange
@@ -70,9 +75,11 @@ impl TableSecurityExchangeTicker
 	}
 
 
-	pub async fn delete_row(&self, security_exchange_ticker_id: i64) -> Result<(), Box<dyn std::error::Error>>
+	pub async fn delete_row(&self, exchange: String, ticker: String) -> Result<(), Box<dyn std::error::Error>>
 	{
-		sqlx::query("DELETE FROM security_exchange_ticker WHERE id = ?").bind(security_exchange_ticker_id).execute(
+		sqlx::query("DELETE FROM security_exchange_ticker WHERE exchange = ? AND ticker = ?").bind(exchange).bind(
+			ticker
+		).execute(
 			self.db_connection.pool()
 		).await?;
 

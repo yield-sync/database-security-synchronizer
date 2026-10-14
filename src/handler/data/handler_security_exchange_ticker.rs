@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::sync::Arc;
 use sqlx::Row;
 
@@ -29,8 +30,8 @@ impl HandlerSecurityExchangeTicker
 	pub async fn synchronize(
 		&self,
 		security_cik: &str,
-		exchanges: &Vec<String>,
-		tickers: &Vec<String>,
+		exchanges: &[String],
+		tickers: &[String],
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
 		log_debug!("Synchronizing security_exchange_ticker..");
@@ -40,38 +41,50 @@ impl HandlerSecurityExchangeTicker
 			return Err("Tickers and exchanges must have the same length".into());
 		}
 
-		for (i, ticker) in tickers.iter().enumerate()
-		{
-			let result = self.t_security_exchange_ticker.find_rows(&security_cik, &exchanges[i], &ticker).await?;
+		// Desired state: (ticker, exchange) pairs from the submission
+		let desired: HashSet<(&str, &str)> = tickers.iter().zip(exchanges.iter()).map(
+			|(ticker, exchange)| (ticker.as_str(), exchange.as_str())
+		).collect();
 
-			if result.len() == 0
-			{
-				self.t_security_exchange_ticker.create_row(&security_cik, &exchanges[i], &ticker).await?;
-			}
-		}
+		// Current state: read once
+		let existing_rows = self.t_security_exchange_ticker.read_rows(security_cik).await?;
 
-		let existing_rows = self.t_security_exchange_ticker.read_rows(&security_cik).await?;
-
-		let mut row_with_id_to_be_deleted: Vec<i64> = Vec::new();
+		let mut existing: HashSet<(String, String)> = HashSet::new();
+		let mut stale: HashSet<(String, String)> = HashSet::new();
 
 		for row in existing_rows
 		{
-			let existing_row_ticker: String = row.get("ticker");
-			let existing_row_exchange: String = row.get("exchange");
+			let ticker: String = row.get("ticker");
+			let exchange: String = row.get("exchange");
 
-			log_superdebug!("Verifying row with ticker {} and exchange {}", existing_row_ticker, existing_row_exchange);
+			log_superdebug!("Verifying row with ticker {} and exchange {}", ticker, exchange);
 
-			if !tickers.contains(&existing_row_ticker.to_string()) || !exchanges.contains(&existing_row_exchange.to_string())
+			if desired.contains(&(ticker.as_str(), exchange.as_str()))
 			{
-				row_with_id_to_be_deleted.push(row.get("id"));
+				existing.insert((ticker, exchange));
+			}
+			else
+			{
+				stale.insert((ticker, exchange));
 			}
 		}
 
-		log_debug!("Deleting rows with IDs: {:?}", row_with_id_to_be_deleted);
+		log_debug!("Deleting stale (ticker, exchange) pairs: {:?}", stale);
 
-		for id in row_with_id_to_be_deleted
+		for (ticker, exchange) in stale
 		{
-			self.t_security_exchange_ticker.delete_row(id).await?;
+			self.t_security_exchange_ticker.delete_row(exchange, ticker).await?;
+		}
+
+		// Insert pairs that don't exist yet
+		for (ticker, exchange) in desired
+		{
+			if !existing.contains(&(ticker.to_string(), exchange.to_string()))
+			{
+				log_superdebug!("Creating row with ticker {} and exchange {}", ticker, exchange);
+
+				self.t_security_exchange_ticker.create_row(security_cik, exchange, ticker).await?;
+			}
 		}
 
 		Ok(())
