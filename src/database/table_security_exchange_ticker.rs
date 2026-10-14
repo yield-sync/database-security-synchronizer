@@ -27,28 +27,6 @@ impl TableSecurityExchangeTicker
 		Ok(existing_rows)
 	}
 
-	pub async fn find_rows(
-		&self,
-		security_cik: &str,
-		exchange: &str,
-		ticker: &str,
-	) -> Result<Vec<MySqlRow>, Box<dyn std::error::Error>>
-	{
-		let existing_rows = sqlx::query(
-			"SELECT * FROM security_exchange_ticker WHERE security_cik = ? AND exchange = ? AND ticker = ?"
-		).bind(
-			security_cik
-		).bind(
-			exchange
-		).bind(
-			ticker
-		).fetch_all(
-			self.db_connection.pool()
-		).await?;
-
-		Ok(existing_rows)
-	}
-
 	pub async fn create_row(
 		&self,
 		security_cik: &str,
