@@ -77,11 +77,15 @@ impl HandlerDatabaseSecuritySynchronizer
 		{
 			log_debug!("Hash found in table sec_submission_file_hash");
 
+			log_info!("Determined synchronization NOT required");
+
 			return Ok(false)
 		}
 		else
 		{
 			log_debug!("Hash NOT found in table sec_submission_file_hash");
+
+			log_info!("Determined synchronization required");
 
 			return Ok(true)
 		}
@@ -144,8 +148,6 @@ impl HandlerDatabaseSecuritySynchronizer
 		{
 			if !self._determine_synchronize_required(submission_file_name, submission_file_hash).await?
 			{
-				log_debug!("Determined synchronization NOT required");
-
 				if force_synchronize
 				{
 					log_info!("Forcing synchronization");
@@ -154,10 +156,6 @@ impl HandlerDatabaseSecuritySynchronizer
 				{
 					return Ok(())
 				}
-			}
-			else
-			{
-				log_debug!("Determined synchronization required");
 			}
 		}
 
