@@ -144,6 +144,13 @@ impl HandlerDatabaseSecuritySynchronizer
 			return Ok(());
 		}
 
+		if submissions_data.exchanges.iter().any(|exchange| exchange.eq_ignore_ascii_case("null"))
+		{
+			log_info!("null exchange not supported for submissions/{}, skipping..", submission_file_name);
+
+			return Ok(());
+		}
+
 		if self.t_security.get_by_cik(&submissions_data.cik).await?.is_some()
 		{
 			if !self._determine_synchronize_required(submission_file_name, submission_file_hash).await?
