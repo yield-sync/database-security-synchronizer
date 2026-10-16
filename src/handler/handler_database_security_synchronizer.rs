@@ -67,7 +67,7 @@ impl HandlerDatabaseSecuritySynchronizer
 	/**
 	* @visibility: Private
 	*/
-	async fn _synchronize_required(
+	async fn _determine_synchronize_required(
 		&self,
 		submission_file_name: &str,
 		submission_file_hash: &str
@@ -142,7 +142,7 @@ impl HandlerDatabaseSecuritySynchronizer
 
 		if self.t_security.get_by_cik(&submissions_data.cik).await?.is_some()
 		{
-			if !self._synchronize_required(submission_file_name, submission_file_hash).await?
+			if !self._determine_synchronize_required(submission_file_name, submission_file_hash).await?
 			{
 				log_debug!("Determined synchronization NOT required");
 
