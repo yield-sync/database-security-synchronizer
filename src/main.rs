@@ -86,7 +86,10 @@ async fn run(args: &Args, handler_database_security_synchronizer: &HandlerDataba
 		let delay = HandlerTime::new().calculate_seconds_until_next_4am();
 		let delay_seconds = delay.as_secs();
 
-		log_info!("Next execution in {}h {}m {}s", delay_seconds / 3600, (delay_seconds % 3600) / 60, delay_seconds % 60);
+		log_info!(
+			"Next execution in {}h {}m {}s",
+			delay_seconds / 3600, (delay_seconds % 3600) / 60, delay_seconds % 60
+		);
 
 		tokio::select!
 		{
