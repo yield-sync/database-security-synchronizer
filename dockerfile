@@ -1,21 +1,26 @@
 # Build stage
-FROM rust:latest AS builder
+FROM rust:1-bookworm AS builder
 
 WORKDIR /app
 
-COPY . .
+# Cache dependencies: build a dummy project first so `cargo build` only
+# re-downloads/re-compiles crates when Cargo.toml / Cargo.lock change
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo "fn main() {}" > src/main.rs && cargo build --release && rm -rf src
 
-RUN cargo build --release
+COPY . .
+RUN touch src/main.rs && cargo build --release
 
 # Runtime stage
 FROM debian:bookworm-slim
 
 WORKDIR /app
 
-# Install runtime dependencies (important for Rust + TLS)
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tzdata && rm -rf /var/lib/apt/lists/*
+
+ENV TZ=America/New_York
 
 COPY --from=builder /app/target/release/database-security-synchronizer .
 
-# Run at container startup, NOT build time
-CMD ["./database-security-synchronizer", "--run-now"]
+# Exec form so the binary is PID 1 and receives SIGTERM from `docker stop`
+CMD ["./database-security-synchronizer"]

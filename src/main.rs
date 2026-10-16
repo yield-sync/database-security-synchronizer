@@ -22,11 +22,11 @@ type AppResult<T> = Result<T, Box<dyn Error>>;
 #[command(author, version, about, long_about = None)]
 struct Args
 {
-	// Run a synchronization immediately, then continue on the daily 4am schedule
-	#[arg(long)]
-	run_now: bool,
+	/// Skip the startup synchronization and wait for the next 4am run
+	#[arg(long, conflicts_with = "once")]
+	skip_run_immediately: bool,
 
-	// Run a single synchronization and exit (for cron / systemd timers)
+	/// Run a single synchronization and exit (for cron / systemd timers)
 	#[arg(long)]
 	once: bool,
 }
@@ -65,7 +65,7 @@ async fn main() -> AppResult<()>
 // Runs the optional immediate sync, then the daily 4am loop until a shutdown signal.
 async fn run(args: &Args, handler_database_security_synchronizer: &HandlerDatabaseSecuritySynchronizer) -> AppResult<()>
 {
-	if args.run_now || args.once
+	if !args.skip_run_immediately
 	{
 		log_info!("Running synchronization immediately");
 
