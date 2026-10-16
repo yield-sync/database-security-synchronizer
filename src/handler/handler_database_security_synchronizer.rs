@@ -83,6 +83,7 @@ impl HandlerDatabaseSecuritySynchronizer
 
 	async fn _process_submission_file(
 		&self,
+		force_synchronize: bool,
 		handler_file_companyfacts_zip: &mut HandlerFileCompanyfactsZip,
 		handler_file_submissions_zip: &mut HandlerFileSubmissionsZip,
 		submission_file_name: &str,
@@ -122,12 +123,20 @@ impl HandlerDatabaseSecuritySynchronizer
 		// Skip if the security exists and this exact submission file was already processed
 		if self.t_security.get_by_cik(&submissions_data.cik).await?.is_some()
 		{
-			if self.h_sec_submission_file_hash.hash_exists(submission_file_name, submission_file_hash).await?
+			if self.h_sec_submission_file_hash.hash_exists(
+				submission_file_name,
+				submission_file_hash
+			).await? && !force_synchronize
 			{
 				log_debug!("Hash found in table sec_submission_file_hash, synchronize NOT required");
 				log_info!("[SKIP] Synchronize not required");
 
 				return Ok(());
+			}
+
+			if force_synchronize
+			{
+				log_info!("Forced synchronize.");
 			}
 
 			log_debug!("Hash NOT found in table sec_submission_file_hash, synchronize required");
@@ -206,7 +215,7 @@ impl HandlerDatabaseSecuritySynchronizer
 		Ok(())
 	}
 
-	async fn _process_submission_files(&self) -> Result<(), Box<dyn std::error::Error>>
+	async fn _process_submission_files(&self, force_synchronize: bool) -> Result<(), Box<dyn std::error::Error>>
 	{
 		let UpdatedSecCompanyfactsAndSubmissions
 		{
@@ -225,6 +234,7 @@ impl HandlerDatabaseSecuritySynchronizer
 		for (index, (submission_file_name, submission_file_hash)) in file_names_to_hashes.into_iter().enumerate()
 		{
 			if let Err(e) = self._process_submission_file(
+				force_synchronize,
 				&mut handler_file_companyfacts_zip,
 				&mut handler_file_submissions_zip,
 				&submission_file_name,
@@ -250,11 +260,11 @@ impl HandlerDatabaseSecuritySynchronizer
 	/**
 	* @visibility: Public
 	*/
-	pub async fn synchronize(&self) -> Result<(), Box<dyn std::error::Error>>
+	pub async fn synchronize(&self, force_synchronize: bool) -> Result<(), Box<dyn std::error::Error>>
 	{
 		log_info!("Building security profile at {}", Local::now().format("%Y-%m-%d %H:%M:%S"));
 
-		self._process_submission_files().await?;
+		self._process_submission_files(force_synchronize).await?;
 
 		log_info!("Security profiles built successfully");
 

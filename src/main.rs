@@ -69,7 +69,7 @@ async fn run(args: &Args, handler_database_security_synchronizer: &HandlerDataba
 	{
 		log_info!("Running synchronization immediately");
 
-		handler_database_security_synchronizer.synchronize().await?;
+		handler_database_security_synchronizer.synchronize(true).await?;
 
 		log_info!("Immediate execution completed");
 
@@ -106,7 +106,7 @@ async fn run(args: &Args, handler_database_security_synchronizer: &HandlerDataba
 			}
 		}
 
-		match handler_database_security_synchronizer.synchronize().await
+		match handler_database_security_synchronizer.synchronize(false).await
 		{
 			Ok(_) => log_info!("Scheduled synchronization completed"),
 			Err(e) => log_error!("Scheduled synchronization failed: {} (will retry at next 4am)", e),
