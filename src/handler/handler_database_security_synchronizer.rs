@@ -139,14 +139,14 @@ impl HandlerDatabaseSecuritySynchronizer
 
 		if submissions_data.exchanges.iter().any(|exchange| exchange.eq_ignore_ascii_case("OTC"))
 		{
-			log_info!("OTC exchange not supported for submissions/{}, skipping..", submission_file_name);
+			log_info!("OTC exchange not supported, skipping..");
 
 			return Ok(());
 		}
 
 		if submissions_data.exchanges.iter().any(|exchange| exchange.eq_ignore_ascii_case("null"))
 		{
-			log_info!("null exchange not supported for submissions/{}, skipping..", submission_file_name);
+			log_info!("null exchange not supported, skipping..");
 
 			return Ok(());
 		}
