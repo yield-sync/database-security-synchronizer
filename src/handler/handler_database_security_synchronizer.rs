@@ -67,6 +67,26 @@ impl HandlerDatabaseSecuritySynchronizer
 	/**
 	* @visibility: Private
 	*/
+	async fn _synchronize_required(
+		&self,
+		submission_file_name: &str,
+		submission_file_hash: &str
+	) -> Result<bool, Box<dyn std::error::Error>>
+	{
+		if self.h_sec_submission_file_hash.hash_exists(submission_file_name, submission_file_hash).await?
+		{
+			log_debug!("Hash found in table sec_submission_file_hash");
+
+			return Ok(false)
+		}
+		else
+		{
+			log_debug!("Hash NOT found in table sec_submission_file_hash");
+
+			return Ok(true)
+		}
+	}
+
 	fn _normalize_phone(phone: &str) -> Option<String>
 	{
 		let digits: String = phone.chars().filter(|c| c.is_ascii_digit()).collect();
@@ -120,29 +140,26 @@ impl HandlerDatabaseSecuritySynchronizer
 			return Ok(());
 		}
 
-		// Skip if the security exists and this exact submission file was already processed
 		if self.t_security.get_by_cik(&submissions_data.cik).await?.is_some()
 		{
-			if self.h_sec_submission_file_hash.hash_exists(
-				submission_file_name,
-				submission_file_hash
-			).await? && !force_synchronize
+			if !self._synchronize_required(submission_file_name, submission_file_hash).await?
 			{
-				log_debug!("Hash found in table sec_submission_file_hash, synchronize NOT required");
-				log_info!("[SKIP] Synchronize not required");
+				log_debug!("Determined synchronization NOT required");
 
-				return Ok(());
+				if force_synchronize
+				{
+					log_info!("Forcing synchronization");
+				}
+				else
+				{
+					return Ok(())
+				}
 			}
-
-			if force_synchronize
+			else
 			{
-				log_info!("Forced synchronize.");
+				log_debug!("Determined synchronization required");
 			}
-
-			log_debug!("Hash NOT found in table sec_submission_file_hash, synchronize required");
 		}
-
-		log_info!("Synchronizing security now..");
 
 		let synchronize_security = SynchronizeSecurity {
 			cik: submissions_data.cik.clone(),
