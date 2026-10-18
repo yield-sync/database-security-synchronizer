@@ -14,4 +14,5 @@ cargo run --release
 
 ### Immediate Run
 
-cargo run --release -- --run-now
+`cargo run --release`
+`cargo run --release -- --skip-run-immediately`
