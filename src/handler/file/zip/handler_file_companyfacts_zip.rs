@@ -1,4 +1,5 @@
 use serde_json::Value;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use zip::ZipArchive;
 
@@ -20,6 +21,44 @@ pub struct HandlerFileCompanyfactsZip
 
 impl HandlerFileCompanyfactsZip
 {
+	// No instance needed
+	/**
+	* Keep only the entry with the latest "end" for each accession number. A filing can report the same fact for
+	* multiple periods (current and prior), but only the current period belongs to that filing.
+	*/
+	fn keep_latest_end_per_filing<T>(rows: Vec<T>, accn: fn(&T) -> &str, end: fn(&T) -> &str) -> Vec<T>
+	{
+		let mut latest: HashMap<String, T> = HashMap::new();
+
+		for row in rows
+		{
+			let key: String = accn(&row).to_string();
+
+			match latest.get(&key)
+			{
+				// "end" is YYYY-MM-DD so string comparison matches date order
+				Some(existing) if end(existing) >= end(&row) => {}
+				_ =>
+				{
+					latest.insert(key, row);
+				}
+			}
+		}
+
+		latest.into_values().collect()
+	}
+
+	pub fn new(path: PathBuf) -> Result<Self, Box<dyn std::error::Error>>
+	{
+		let file = File::open(&path)?;
+
+		let archive = ZipArchive::new(file)?;
+
+		Ok(Self { archive, })
+	}
+
+
+	// Instance methods
 	fn extract_assets(&mut self, json_submission: &Value) -> Result<Vec<Assets>, Box<dyn std::error::Error>>
 	{
 		let assets: Vec<Assets> = json_submission.get(
@@ -92,7 +131,13 @@ impl HandlerFileCompanyfactsZip
 			}
 		).unwrap_or_default();
 
-		Ok(common_stock_shares_outstanding)
+		Ok(
+			Self::keep_latest_end_per_filing(
+				common_stock_shares_outstanding,
+				|r| &r.filing_accession_number,
+				|r| &r.end,
+			)
+		)
 	}
 
 	fn extract_entity_common_stock_shares_outstanding(
@@ -131,18 +176,15 @@ impl HandlerFileCompanyfactsZip
 			}
 		).unwrap_or_default();
 
-		Ok(entity_common_stock_shares_outstanding)
+		Ok(
+			Self::keep_latest_end_per_filing(
+				entity_common_stock_shares_outstanding,
+				|r| &r.filing_accession_number,
+				|r| &r.end,
+			)
+		)
 	}
 
-
-	pub fn new(path: PathBuf) -> Result<Self, Box<dyn std::error::Error>>
-	{
-		let file = File::open(&path)?;
-
-		let archive = ZipArchive::new(file)?;
-
-		Ok(Self { archive, })
-	}
 
 	/**
 	* Load JSON from a file inside companyfacts.zip
