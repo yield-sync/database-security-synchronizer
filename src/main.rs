@@ -31,6 +31,8 @@ struct Args
 	once: bool,
 }
 
+const FORCE_SYNCHRONIZE_ON_STARTUP: bool = true;
+const FORCE_SYNCHRONIZE_ON_SCHEDULE: bool = false;
 
 // Entry point: sets up resources, runs the scheduler, and always closes the DB.
 #[tokio::main]
@@ -69,7 +71,7 @@ async fn run(args: &Args, handler_database_security_synchronizer: &HandlerDataba
 	{
 		log_info!("Running synchronization immediately");
 
-		handler_database_security_synchronizer.synchronize(true).await?;
+		handler_database_security_synchronizer.synchronize(FORCE_SYNCHRONIZE_ON_STARTUP).await?;
 
 		log_info!("Immediate execution completed");
 
@@ -106,7 +108,7 @@ async fn run(args: &Args, handler_database_security_synchronizer: &HandlerDataba
 			}
 		}
 
-		match handler_database_security_synchronizer.synchronize(false).await
+		match handler_database_security_synchronizer.synchronize(FORCE_SYNCHRONIZE_ON_SCHEDULE).await
 		{
 			Ok(_) => log_info!("Scheduled synchronization completed"),
 			Err(e) => log_error!("Scheduled synchronization failed: {} (will retry at next 4am)", e),
