@@ -30,7 +30,9 @@ impl HandlerApiSec
 	pub const COMPANY_FACTS_ZIP: &'static str = "companyfacts.zip";
 	pub const SUBMISSIONS_ZIP: &'static str = "submissions.zip";
 
-	const SECONDS_24_HOURS: Duration = Duration::from_secs(24 * 60 * 60);
+	// Scheduled runs are 24h apart and the file timestamp is set when the download finishes, so a 24h limit would skip
+	// every other day. 20h leaves room for download time while still blocking repeat downloads on quick restarts.
+	const MAX_ZIP_AGE: Duration = Duration::from_secs(20 * 60 * 60);
 
 
 	/**
@@ -127,7 +129,7 @@ impl HandlerApiSec
 
 		let age: Duration = SystemTime::now().duration_since(modified)?;
 
-		if age > Self::SECONDS_24_HOURS
+		if age > Self::MAX_ZIP_AGE
 		{
 			log_info!("companyfacts.zip is {} seconds old. Redownload needed.", age.as_secs());
 
@@ -164,7 +166,7 @@ impl HandlerApiSec
 
 		let age: Duration = SystemTime::now().duration_since(modified)?;
 
-		if age > Self::SECONDS_24_HOURS
+		if age > Self::MAX_ZIP_AGE
 		{
 			log_info!("submissions.zip is old. Redownload needed.");
 
