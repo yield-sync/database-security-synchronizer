@@ -3,13 +3,6 @@ use std::sync::Arc;
 use super::database_connection::DatabaseConnection;
 use crate::schema::EntityCommonStockSharesOutstanding;
 
-use sqlx::FromRow;
-
-
-#[derive(Debug, FromRow)]
-pub struct RowFilingEntityCommonStockSharesOutstanding
-{}
-
 
 pub struct TableFilingEntityCommonStockSharesOutstanding
 {
@@ -24,7 +17,11 @@ impl TableFilingEntityCommonStockSharesOutstanding
 		Self { db_connection }
 	}
 
-	pub async fn create_row(
+	/**
+	* Insert the row, or overwrite it if this filing already has one. Overwriting lets a re-sync correct rows that
+	* were stored with the wrong period before the parser kept only the latest "end" per filing.
+	*/
+	pub async fn upsert_row(
 		&self,
 		entity_common_stock_shares_outstanding: &EntityCommonStockSharesOutstanding,
 	) -> Result<(), Box<dyn std::error::Error>>
@@ -39,6 +36,11 @@ impl TableFilingEntityCommonStockSharesOutstanding
 					val
 				)
 				VALUES (?, ?, ?, ?, ?)
+				ON DUPLICATE KEY UPDATE
+					end = VALUES(end),
+					fp = VALUES(fp),
+					fy = VALUES(fy),
+					val = VALUES(val)
 			"#
 		).bind(
 			&entity_common_stock_shares_outstanding.filing_accession_number
@@ -49,27 +51,11 @@ impl TableFilingEntityCommonStockSharesOutstanding
 		).bind(
 			&entity_common_stock_shares_outstanding.fy
 		).bind(
-			&entity_common_stock_shares_outstanding.val
+			entity_common_stock_shares_outstanding.val
 		).execute(
 			self.db_connection.pool()
 		).await?;
 
 		Ok(())
-	}
-
-	pub async fn read_row(
-		&self,
-		filing_accession_number: &str,
-	) -> Result<Option<RowFilingEntityCommonStockSharesOutstanding>, Box<dyn std::error::Error>>
-	{
-		let existing_row = sqlx::query_as::<_, RowFilingEntityCommonStockSharesOutstanding>(
-			"SELECT * FROM filing_entity_common_stock_shares_outstanding WHERE filing_accession_number = ?"
-		).bind(
-			filing_accession_number
-		).fetch_optional(
-			self.db_connection.pool()
-		).await?;
-
-		Ok(existing_row)
 	}
 }

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::database::database_connection::DatabaseConnection;
 use crate::schema::CommonStockSharesOutstanding;
 
-use crate::{ log_debug, log_superdebug, };
+use crate::{ log_debug };
 use crate::database::table_filing_common_stock_shares_outstanding::TableFilingCommonStockSharesOutstanding;
 
 
@@ -37,20 +37,7 @@ impl HandlerFilingCommonStockSharesOutstanding
 
 		for csso in common_stock_shares_outstanding
 		{
-			// Check if the data is already in the database
-			if let Some(_) = self.table_filing_common_stock_shares_outstanding.read_row(
-				&csso.filing_accession_number
-			).await?
-			{
-				log_superdebug!(
-					"Row with filing_accession_number {} already exists in database",
-					csso.filing_accession_number
-				);
-
-				continue;
-			}
-
-			self.table_filing_common_stock_shares_outstanding.create_row(&csso).await?;
+			self.table_filing_common_stock_shares_outstanding.upsert_row(&csso).await?;
 		}
 
 		Ok(())
