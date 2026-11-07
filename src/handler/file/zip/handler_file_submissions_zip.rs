@@ -179,6 +179,7 @@ impl HandlerFileSubmissionsZip
 			let filing_dates = get_vec(json.get("filingDate"));
 			let report_dates = get_vec(json.get("reportDate"));
 			let acceptance = get_vec(json.get("acceptanceDateTime"));
+			let forms = get_vec(json.get("form"));
 
 			let filings_len = accession_number.len();
 
@@ -215,7 +216,7 @@ impl HandlerFileSubmissionsZip
 						accession_number: accession_number.get(i).cloned().unwrap_or_default(),
 						filing_date,
 						report_date,
-						form: get_vec(json.get("form")).get(i).cloned().unwrap_or_default(),
+						form: forms.get(i).cloned().unwrap_or_default(),
 						acceptance: acceptance_dt,
 					}
 				);
