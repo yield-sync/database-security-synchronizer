@@ -71,13 +71,18 @@ async fn run(args: &Args, handler_database_security_synchronizer: &HandlerDataba
 	{
 		log_info!("Running synchronization immediately");
 
-		handler_database_security_synchronizer.synchronize(FORCE_SYNCHRONIZE_ON_STARTUP).await?;
-
-		log_info!("Immediate execution completed");
+		let startup_result = handler_database_security_synchronizer.synchronize(FORCE_SYNCHRONIZE_ON_STARTUP).await;
 
 		if args.once
 		{
-			return Ok(());
+			// Single run mode: pass the error up so the process exits with a failure code
+			return startup_result;
+		}
+
+		match startup_result
+		{
+			Ok(_) => log_info!("Immediate execution completed"),
+			Err(error) => log_error!("Startup synchronization failed: {} (will retry at next 4am)", error),
 		}
 	}
 
