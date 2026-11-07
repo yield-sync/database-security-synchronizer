@@ -52,4 +52,34 @@ impl TableAsset
 
 		Ok(id)
 	}
+
+	/**
+	* Update the name of the asset that belongs to the security with this CIK
+	*/
+	pub async fn update_name_by_security_cik<'executor, TExecutor>(
+		&self,
+		executor: TExecutor,
+		security_cik: &str,
+		name: &str,
+	) -> Result<(), Box<dyn std::error::Error>>
+	where
+		TExecutor: Executor<'executor, Database = MySql>,
+	{
+		sqlx::query(
+			r#"
+				UPDATE asset
+				JOIN security ON security.asset_id = asset.id
+				SET asset.name = ?
+				WHERE security.cik = ?
+			"#
+		).bind(
+			name
+		).bind(
+			security_cik
+		).execute(
+			executor
+		).await?;
+
+		Ok(())
+	}
 }

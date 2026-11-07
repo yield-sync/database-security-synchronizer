@@ -79,6 +79,12 @@ impl HandlerSecurity
 				&synchronize_security.sic,
 				&synchronize_security.website,
 			).await?;
+
+			self.t_asset.update_name_by_security_cik(
+				self.db_connection.pool(),
+				&synchronize_security.cik,
+				&synchronize_security.name,
+			).await?;
 		}
 		else
 		{
