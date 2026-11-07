@@ -15,7 +15,6 @@ use crate::handler::data::handler_filing_assets::HandlerFilingAssets;
 use crate::handler::data::handler_sec_submission_file_hash::HandlerSecSubmissionFileHash;
 use crate::handler::file::zip::HandlerFileCompanyfactsZip;
 use crate::handler::file::zip::HandlerFileSubmissionsZip;
-use crate::schema::Companyfacts;
 use crate::schema::SubmissionsData;
 
 use crate::{ log_debug, log_ultradebug, log_error, log_info, log_warn };
@@ -182,8 +181,14 @@ impl HandlerDatabaseSecuritySynchronizer
 			website: submissions_data.website,
 		};
 
+		// Every step runs even if an earlier one fails, but the hash is only saved when all of them succeed. Otherwise
+		// a failed file would be marked as done and skipped on every run until it changes upstream.
+		let mut had_error: bool = false;
+
 		if let Err(e) = self.h_security.synchronize(&synchronize_security).await
 		{
+			had_error = true;
+
 			log_error!("Failed to synchronize security: {}", e);
 		}
 
@@ -193,35 +198,58 @@ impl HandlerDatabaseSecuritySynchronizer
 			&submissions_data.tickers,
 		).await
 		{
+			had_error = true;
+
 			log_error!("Failed to synchronize security_exchange_ticker: {}", e);
 		}
 
 		if let Err(e) = self.h_filing.synchronize(&submissions_data.cik, &submissions_data.filings).await
 		{
+			had_error = true;
+
 			log_error!("Failed to synchronize filing with error: {}", e);
 		}
 
 		if handler_file_companyfacts_zip.file_exists(submission_file_name)
 		{
-			let companyfacts: Companyfacts = handler_file_companyfacts_zip.extract_data(submission_file_name)?;
-
-			if let Err(e) = self.h_filing_assets.synchronize(&companyfacts.assets).await
+			match handler_file_companyfacts_zip.extract_data(submission_file_name)
 			{
-				log_error!("Failed to synchronize filing_assets: {}", e);
-			}
+				Ok(companyfacts) =>
+				{
+					if let Err(e) = self.h_filing_assets.synchronize(&companyfacts.assets).await
+					{
+						had_error = true;
 
-			if let Err(e) = self.h_filing_common_stock_shares_outstanding.synchronize(
-				&companyfacts.common_stock_shares_outstanding,
-			).await
-			{
-				log_error!("Failed to synchronize filing_common_stock_shares_outstanding: {}", e);
-			}
+						log_error!("Failed to synchronize filing_assets: {}", e);
+					}
 
-			if let Err(e) = self.h_filing_entity_common_stock_shares_outstanding.synchronize(
-				&companyfacts.entity_common_stock_shares_outstanding,
-			).await
-			{
-				log_error!("Failed to synchronize filing_entity_common_stock_shares_outstanding: {}", e);
+					if let Err(e) = self.h_filing_common_stock_shares_outstanding.synchronize(
+						&companyfacts.common_stock_shares_outstanding,
+					).await
+					{
+						had_error = true;
+
+						log_error!("Failed to synchronize filing_common_stock_shares_outstanding: {}", e);
+					}
+
+					if let Err(e) = self.h_filing_entity_common_stock_shares_outstanding.synchronize(
+						&companyfacts.entity_common_stock_shares_outstanding,
+					).await
+					{
+						had_error = true;
+
+						log_error!(
+							"Failed to synchronize filing_entity_common_stock_shares_outstanding: {}",
+							e,
+						);
+					}
+				}
+				Err(e) =>
+				{
+					had_error = true;
+
+					log_error!("Failed to extract companyfacts/{}: {}", submission_file_name, e);
+				}
 			}
 		}
 		else
@@ -229,10 +257,14 @@ impl HandlerDatabaseSecuritySynchronizer
 			log_warn!("{} not found in companyfacts.zip.", submission_file_name);
 		}
 
-		self.h_sec_submission_file_hash.synchronize(
-			&submission_file_name.to_string(),
-			&submission_file_hash.to_string()
-		).await?;
+		if had_error
+		{
+			log_warn!("Not saving hash for submissions/{}, it will retry next run", submission_file_name);
+
+			return Ok(());
+		}
+
+		self.h_sec_submission_file_hash.synchronize(submission_file_name, submission_file_hash).await?;
 
 		Ok(())
 	}
@@ -245,7 +277,10 @@ impl HandlerDatabaseSecuritySynchronizer
 			mut handler_file_submissions_zip,
 		} = self.h_api_sec.get_updated_companyfacts_and_submissions().await?;
 
-		let file_names_to_hashes: HashMap<String, String> = handler_file_submissions_zip.compute_file_names_to_hashes()?;
+		let file_names_to_hashes: HashMap<
+			String,
+			String,
+		> = handler_file_submissions_zip.compute_file_names_to_hashes()?;
 
 		let total_files: usize = file_names_to_hashes.len();
 
