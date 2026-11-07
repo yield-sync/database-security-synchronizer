@@ -47,18 +47,11 @@ impl HandlerSecSubmissionFileHash
 		sec_submission_file_hash: &str,
 	) -> Result<bool, Box<dyn std::error::Error>>
 	{
-		let result = self.table_sec_submission_file_hash.read_row(
-			&submission_file_name,
-			&sec_submission_file_hash,
+		let exists: bool = self.table_sec_submission_file_hash.exists(
+			submission_file_name,
+			sec_submission_file_hash,
 		).await?;
 
-		if let Some(_) = result
-		{
-			Ok(true)
-		}
-		else
-		{
-			Ok(false)
-		}
+		Ok(exists)
 	}
 }

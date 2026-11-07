@@ -119,7 +119,7 @@ impl TableSecurity
 		phone: &str,
 		sic: &str,
 		website: &str,
-	) -> Result<SecurityRow, Box<dyn std::error::Error>>
+	) -> Result<(), Box<dyn std::error::Error>>
 	{
 		sqlx::query(
 			r#"
@@ -167,15 +167,6 @@ impl TableSecurity
 			self.db_connection.pool()
 		).await?;
 
-		// Fetch and return the updated row
-		let security = sqlx::query_as::<_, SecurityRow>(
-			"SELECT * FROM security WHERE cik = ?"
-		).bind(
-	   		cik
-		).fetch_one(
-			self.db_connection.pool()
-		).await?;
-
-		Ok(security)
+		Ok(())
 	}
 }

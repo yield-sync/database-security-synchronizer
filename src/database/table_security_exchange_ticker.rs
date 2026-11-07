@@ -18,7 +18,9 @@ impl TableSecurityExchangeTicker
 
 	pub async fn read_rows(&self, security_cik: &str) -> Result<Vec<MySqlRow>, Box<dyn std::error::Error>>
 	{
-		let existing_rows = sqlx::query("SELECT * FROM security_exchange_ticker WHERE security_cik = ?").bind(
+		let existing_rows = sqlx::query(
+			"SELECT ticker, exchange FROM security_exchange_ticker WHERE security_cik = ?"
+		).bind(
 			security_cik
 		).fetch_all(
 			self.db_connection.pool()
