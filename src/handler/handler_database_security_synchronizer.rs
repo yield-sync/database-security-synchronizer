@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::database::database_connection::DatabaseConnection;
-use crate::database::table_security::TableSecurity;
 use crate::handler::HandlerApiSec;
 use crate::handler::UpdatedSecCompanyfactsAndSubmissions;
 use crate::handler::HandlerFilingCommonStockSharesOutstanding;
@@ -31,7 +30,6 @@ pub struct HandlerDatabaseSecuritySynchronizer
 	h_security: HandlerSecurity,
 	h_security_exchange_ticker: HandlerSecurityExchangeTicker,
 	h_filing: HandlerFiling,
-	t_security: TableSecurity,
 }
 
 
@@ -57,7 +55,6 @@ impl HandlerDatabaseSecuritySynchronizer
 				h_security: HandlerSecurity::new(db_connection.clone()),
 				h_security_exchange_ticker: HandlerSecurityExchangeTicker::new(db_connection.clone()),
 				h_filing: HandlerFiling::new(db_connection.clone()),
-				t_security: TableSecurity::new(db_connection.clone()),
 			}
 		)
 	}
@@ -72,19 +69,16 @@ impl HandlerDatabaseSecuritySynchronizer
 		submission_file_hash: &str
 	) -> Result<bool, Box<dyn std::error::Error>>
 	{
+		// Runs for every file in the zip (hundreds of thousands), so the "not required" case logs quietly
 		if self.h_sec_submission_file_hash.hash_exists(submission_file_name, submission_file_hash).await?
 		{
-			log_debug!("Hash found in table sec_submission_file_hash");
-
-			log_info!("Determined synchronization NOT required");
+			log_ultradebug!("Hash found for submissions/{}, synchronization NOT required", submission_file_name);
 
 			return Ok(false)
 		}
 		else
 		{
-			log_debug!("Hash NOT found in table sec_submission_file_hash");
-
-			log_info!("Determined synchronization required");
+			log_debug!("Hash NOT found for submissions/{}, synchronization required", submission_file_name);
 
 			return Ok(true)
 		}
@@ -117,6 +111,25 @@ impl HandlerDatabaseSecuritySynchronizer
 	{
 		let percent_complete: f64 = (current as f64 / total_files as f64) * 100.0;
 
+		// Supplementary files (CIK##########-submissions-001.json) only hold older filings. They are already read
+		// through their main file's "filings.files" list, so processing them on their own would parse them twice.
+		if submission_file_name.contains("-submissions-")
+		{
+			log_ultradebug!("submissions/{} is a supplementary filings file, skipping..", submission_file_name);
+
+			return Ok(());
+		}
+
+		// Check the hash before parsing anything. Unchanged files are the vast majority, so this skips almost all of
+		// the work on a normal run. A forced run ignores the hashes and processes everything.
+		if !force_synchronize && !self._determine_synchronize_required(
+			submission_file_name,
+			submission_file_hash,
+		).await?
+		{
+			return Ok(());
+		}
+
 		let submissions_data: SubmissionsData = handler_file_submissions_zip.extract_submissions_data(
 			submission_file_name
 		)?;
@@ -124,6 +137,9 @@ impl HandlerDatabaseSecuritySynchronizer
 		if submissions_data.tickers.is_empty()
 		{
 			log_ultradebug!("No tickers found in submissions/{}, skipping..", submission_file_name);
+
+			// Save the hash so this file isn't parsed again until it changes
+			self.h_sec_submission_file_hash.synchronize(submission_file_name, submission_file_hash).await?;
 
 			return Ok(());
 		}
@@ -140,6 +156,8 @@ impl HandlerDatabaseSecuritySynchronizer
 		{
 			log_info!("OTC exchange not supported, skipping..");
 
+			self.h_sec_submission_file_hash.synchronize(submission_file_name, submission_file_hash).await?;
+
 			return Ok(());
 		}
 
@@ -147,22 +165,9 @@ impl HandlerDatabaseSecuritySynchronizer
 		{
 			log_info!("null exchange not supported, skipping..");
 
-			return Ok(());
-		}
+			self.h_sec_submission_file_hash.synchronize(submission_file_name, submission_file_hash).await?;
 
-		if self.t_security.get_by_cik(&submissions_data.cik).await?.is_some()
-		{
-			if !self._determine_synchronize_required(submission_file_name, submission_file_hash).await?
-			{
-				if force_synchronize
-				{
-					log_info!("Forcing synchronization");
-				}
-				else
-				{
-					return Ok(())
-				}
-			}
+			return Ok(());
 		}
 
 		let synchronize_security = SynchronizeSecurity {
