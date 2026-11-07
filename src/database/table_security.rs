@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use sqlx::FromRow;
+use sqlx::{ Executor, FromRow, MySql };
 use super::database_connection::DatabaseConnection;
 
 
@@ -30,8 +30,13 @@ impl TableSecurity
 		Ok(row)
 	}
 
-	pub async fn create_row(
+	/**
+	* Accepts any executor (the pool, a connection, or a transaction) so the caller decides whether this insert is
+	* part of a transaction.
+	*/
+	pub async fn create_row<'executor, TExecutor>(
 		&self,
+		executor: TExecutor,
 		asset_id: i32,
 		business_city: &str,
 		business_country: &str,
@@ -45,7 +50,9 @@ impl TableSecurity
 		phone: &str,
 		sic: &str,
 		website: &str,
-	) -> Result<SecurityRow, Box<dyn std::error::Error>>
+	) -> Result<(), Box<dyn std::error::Error>>
+	where
+		TExecutor: Executor<'executor, Database = MySql>,
 	{
 		sqlx::query(
 			r#"
@@ -92,19 +99,10 @@ impl TableSecurity
 		).bind(
 			website
 		).execute(
-			self.db_connection.pool()
+			executor
 		).await?;
 
-		// Fetch and return the inserted row
-		let security = sqlx::query_as::<_, SecurityRow>(
-			"SELECT * FROM security WHERE cik = ?"
-		).bind(
-	   		cik
-		).fetch_one(
-			self.db_connection.pool()
-		).await?;
-
-		Ok(security)
+		Ok(())
 	}
 
 	pub async fn update_row(

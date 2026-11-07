@@ -61,6 +61,7 @@ impl HandlerFileCompanyfactsZip
 
 
 	// Instance methods
+
 	fn extract_assets(&mut self, json_submission: &Value) -> Result<Vec<Assets>, Box<dyn std::error::Error>>
 	{
 		let entries: &[Value] = json_submission.get(
@@ -156,8 +157,8 @@ impl HandlerFileCompanyfactsZip
 		Ok(
 			Self::keep_latest_end_per_filing(
 				common_stock_shares_outstanding,
-				|r| &r.filing_accession_number,
-				|r| &r.end,
+				|row| &row.filing_accession_number,
+				|row| &row.end,
 			)
 		)
 	}
@@ -211,8 +212,8 @@ impl HandlerFileCompanyfactsZip
 		Ok(
 			Self::keep_latest_end_per_filing(
 				entity_common_stock_shares_outstanding,
-				|r| &r.filing_accession_number,
-				|r| &r.end,
+				|row| &row.filing_accession_number,
+				|row| &row.end,
 			)
 		)
 	}

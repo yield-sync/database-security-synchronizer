@@ -4,7 +4,7 @@ use crate::database::database_connection::DatabaseConnection;
 use crate::database::table_security::TableSecurity;
 
 use crate::{ log_debug };
-use crate::database::table_asset::{ AssetRow, TableAsset };
+use crate::database::table_asset::TableAsset;
 
 
 #[derive(Debug)]
@@ -28,8 +28,9 @@ pub struct SynchronizeSecurity
 
 pub struct HandlerSecurity
 {
+	db_connection: Arc<DatabaseConnection>,
 	t_asset: TableAsset,
-	t_security: TableSecurity
+	t_security: TableSecurity,
 }
 
 
@@ -42,6 +43,7 @@ impl HandlerSecurity
 	{
 		Self
 		{
+			db_connection: db_connection.clone(),
 			t_asset: TableAsset::new(db_connection.clone()),
 			t_security: TableSecurity::new(db_connection.clone()),
 		}
@@ -82,16 +84,21 @@ impl HandlerSecurity
 		{
 			log_debug!("Security not found in database. Inserting it now..");
 
-			// Insert into database
-			let asset: AssetRow = self.t_asset.create_row(
-				&String::from("Other"),
-				&String::from("Other"),
+			// Both inserts share one transaction: if the security insert fails, the asset insert is rolled back
+			// instead of leaving an orphaned asset row behind. Dropping the transaction without commit() rolls back.
+			let mut transaction = self.db_connection.pool().begin().await?;
+
+			let asset_id: i32 = self.t_asset.create_row(
+				&mut *transaction,
+				"Other",
+				"Other",
 				&synchronize_security.name,
-				&String::from("security")
+				"security",
 			).await?;
 
 			self.t_security.create_row(
-				asset.id,
+				&mut *transaction,
+				asset_id,
 				&synchronize_security.business_city,
 				&synchronize_security.business_country,
 				&synchronize_security.business_state,
@@ -105,8 +112,9 @@ impl HandlerSecurity
 				&synchronize_security.sic,
 				&synchronize_security.website,
 			).await?;
-		}
 
+			transaction.commit().await?;
+		}
 
 		Ok(())
 	}

@@ -1,18 +1,16 @@
 use std::sync::Arc;
-use sqlx::FromRow;
+
+use sqlx::{ Executor, MySql };
+
 use super::database_connection::DatabaseConnection;
 
 
-#[derive(Debug, FromRow)]
-pub struct AssetRow
-{
-	pub id: i32,
-}
-
 pub struct TableAsset
 {
+	#[allow(dead_code)]
 	db_connection: Arc<DatabaseConnection>,
 }
+
 
 impl TableAsset
 {
@@ -21,13 +19,22 @@ impl TableAsset
 		Self { db_connection }
 	}
 
-	pub async fn create_row(
+	/**
+	* Insert an asset and return its auto-generated id.
+	*
+	* Accepts any executor (the pool, a connection, or a transaction) so the caller decides whether this insert is
+	* part of a transaction.
+	*/
+	pub async fn create_row<'executor, TExecutor>(
 		&self,
+		executor: TExecutor,
 		industry: &str,
 		sector: &str,
 		name: &str,
-		asset_type: &str
-	) -> Result<AssetRow, Box<dyn std::error::Error>>
+		asset_type: &str,
+	) -> Result<i32, Box<dyn std::error::Error>>
+	where
+		TExecutor: Executor<'executor, Database = MySql>,
 	{
 		let result = sqlx::query("INSERT INTO asset (industry, sector, name, `type`) VALUES (?, ?, ?, ?)").bind(
 			industry
@@ -38,21 +45,11 @@ impl TableAsset
 		).bind(
 			asset_type
 		).execute(
-			self.db_connection.pool()
+			executor
 		).await?;
 
-		// Get auto-generated ID
-		let id = result.last_insert_id() as i64;
+		let id: i32 = i32::try_from(result.last_insert_id())?;
 
-		// Fetch and return the inserted row
-		let asset = sqlx::query_as::<_, AssetRow>(
-			"SELECT * FROM asset WHERE id = ?"
-		).bind(
-			id
-		).fetch_one(
-			self.db_connection.pool()
-		).await?;
-
-		Ok(asset)
+		Ok(id)
 	}
 }
