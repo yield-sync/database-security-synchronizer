@@ -1,15 +1,9 @@
 use std::sync::Arc;
 
-use chrono::{ NaiveDate, NaiveDateTime };
+use sqlx::{ MySql, QueryBuilder };
 
 use super::database_connection::DatabaseConnection;
-
-use sqlx::FromRow;
-
-
-#[derive(Debug, FromRow)]
-pub struct RowSecurityFiling
-{}
+use crate::schema::SubmissionsDataFilings;
 
 
 pub struct TableSecurityFiling
@@ -20,58 +14,59 @@ pub struct TableSecurityFiling
 
 impl TableSecurityFiling
 {
+	// 6 values per row, so 1000 rows stays far below MySQL's 65,535 placeholder limit per query
+	const BATCH_SIZE: usize = 1000;
+
+
 	pub fn new(db_connection: Arc<DatabaseConnection>) -> Self
 	{
 		Self { db_connection }
 	}
 
-	pub async fn create_row(
+	/**
+	* Insert filings in batches of BATCH_SIZE rows per query. Filings that already exist are left untouched.
+	*
+	* "ON DUPLICATE KEY UPDATE accession_number = accession_number" is a no-op update: it only swallows duplicate key
+	* conflicts, so every other error (bad value, missing security, ...) still fails loudly. INSERT IGNORE would turn
+	* those into silent warnings.
+	*/
+	pub async fn create_rows(
 		&self,
 		security_cik: &str,
-		accession_number: &str,
-		form: &str,
-		filing_date: &NaiveDate,
-		report_date: &Option<NaiveDate>,
-		acceptance: &NaiveDateTime,
+		filings: &[SubmissionsDataFilings],
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		sqlx::query(
-			r#"
-				INSERT INTO filing (security_cik, accession_number, form, filing_date, report_date, acceptance)
-				VALUES (?, ?, ?, ?, ?, ?)
-			"#,
-		).bind(
-			security_cik
-		).bind(
-			accession_number
-		).bind(
-			form
-		).bind(
-			filing_date
-		).bind(
-			report_date
-		).bind(
-			acceptance
-		).execute(
-			self.db_connection.pool()
-		).await?;
+		for batch in filings.chunks(Self::BATCH_SIZE)
+		{
+			let mut query_builder: QueryBuilder<MySql> = QueryBuilder::new(
+				"INSERT INTO filing (security_cik, accession_number, form, filing_date, report_date, acceptance) "
+			);
+
+			query_builder.push_values(
+				batch,
+				|mut row, filing|
+				{
+					row.push_bind(
+						security_cik
+					).push_bind(
+						&filing.accession_number
+					).push_bind(
+						&filing.form
+					).push_bind(
+						filing.filing_date
+					).push_bind(
+						filing.report_date
+					).push_bind(
+						filing.acceptance
+					);
+				},
+			);
+
+			query_builder.push(" ON DUPLICATE KEY UPDATE accession_number = accession_number");
+
+			query_builder.build().execute(self.db_connection.pool()).await?;
+		}
 
 		Ok(())
 	}
-
-	pub async fn read_row(
-			&self,
-			accession_number: &str,
-		) -> Result<Option<RowSecurityFiling>, Box<dyn std::error::Error>>
-		{
-			let existing_row = sqlx::query_as::<_, RowSecurityFiling>(
-				"SELECT * FROM filing WHERE accession_number = ?"
-			).bind(
-				accession_number
-			).fetch_optional(
-				self.db_connection.pool()
-			).await?;
-
-			Ok(existing_row)
-		}
 }

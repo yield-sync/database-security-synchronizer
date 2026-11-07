@@ -4,7 +4,7 @@ use crate::database::database_connection::DatabaseConnection;
 
 use crate::database::table_filing::{ TableSecurityFiling, };
 
-use crate::{ log_debug, log_ultradebug };
+use crate::{ log_debug };
 use crate::schema::{ SubmissionsDataFilings };
 
 
@@ -28,35 +28,15 @@ impl HandlerFiling
 	}
 
 	pub async fn synchronize(
-	&self,
+		&self,
 		security_cik: &str,
 		filings: &Vec<SubmissionsDataFilings>,
-	) -> Result<Vec<i64>, Box<dyn std::error::Error>>
+	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		log_debug!("Synchronizing filings..");
+		log_debug!("Synchronizing {} filings..", filings.len());
 
-		for f in filings
-		{
-			if let Some(_) = self.t_filing.read_row(&f.accession_number).await?
-			{
-				log_ultradebug!(
-					"Row with accession_number {} already exists in database",
-					f.accession_number
-				);
+		self.t_filing.create_rows(security_cik, filings).await?;
 
-				continue;
-			}
-
-			self.t_filing.create_row(
-				&security_cik,
-				&f.accession_number,
-				&f.form,
-				&f.filing_date,
-				&f.report_date,
-				&f.acceptance,
-			).await?;
-		}
-
-		Ok(vec![])
+		Ok(())
 	}
 }

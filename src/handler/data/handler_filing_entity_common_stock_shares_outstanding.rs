@@ -33,12 +33,14 @@ impl HandlerFilingEntityCommonStockSharesOutstanding
 		entity_common_stock_shares_outstanding: &Vec<EntityCommonStockSharesOutstanding>,
 	) -> Result<(), Box<dyn std::error::Error>>
 	{
-		log_debug!("Synchronizing filing_entity_common_stock_shares_outstanding..");
+		log_debug!(
+			"Synchronizing {} filing_entity_common_stock_shares_outstanding..",
+			entity_common_stock_shares_outstanding.len(),
+		);
 
-		for ecsso in entity_common_stock_shares_outstanding
-		{
-			self.table_filing_entity_common_stock_shares_outstanding.upsert_row(&ecsso).await?;
-		}
+		self.table_filing_entity_common_stock_shares_outstanding.upsert_rows(
+			entity_common_stock_shares_outstanding
+		).await?;
 
 		Ok(())
 	}

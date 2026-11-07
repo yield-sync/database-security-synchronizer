@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::database::database_connection::DatabaseConnection;
 use crate::schema::Assets;
 
-use crate::{ log_debug, log_superdebug };
+use crate::{ log_debug };
 use crate::database::table_filing_assets::TableFilingAssets;
 
 
@@ -26,25 +26,11 @@ impl HandlerFilingAssets
 		}
 	}
 
-	pub async fn synchronize(&self, assets: &Vec<Assets>,) -> Result<(), Box<dyn std::error::Error>>
+	pub async fn synchronize(&self, assets: &Vec<Assets>) -> Result<(), Box<dyn std::error::Error>>
 	{
-		log_debug!("Synchronizing filing_assets..");
+		log_debug!("Synchronizing {} filing_assets..", assets.len());
 
-		for a in assets
-		{
-			// Check if the data is already in the database
-			if let Some(_) = self.table_filing_assets.read_row(&a.filing_accession_number, &a.end).await?
-			{
-				log_superdebug!(
-					"Row with filing_accession_number {} already exists in database",
-					a.filing_accession_number
-				);
-
-				continue;
-			}
-
-			self.table_filing_assets.create_row(&a).await?;
-		}
+		self.table_filing_assets.create_rows(assets).await?;
 
 		Ok(())
 	}
