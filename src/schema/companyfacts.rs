@@ -5,7 +5,7 @@ pub struct Assets
 	pub end: String,
 	pub fp: String,
 	pub fy: i64,
-	pub val: i64,
+	pub val: f64,
 }
 
 #[derive(Debug)]
@@ -15,7 +15,7 @@ pub struct CommonStockSharesOutstanding
 	pub end: String,
 	pub fp: String,
 	pub fy: i64,
-	pub val: i64,
+	pub val: f64,
 }
 
 #[derive(Debug)]
@@ -25,7 +25,7 @@ pub struct EntityCommonStockSharesOutstanding
 	pub end: String,
 	pub fp: String,
 	pub fy: i64,
-	pub val: i64,
+	pub val: f64,
 }
 
 #[derive(Debug)]
