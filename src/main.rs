@@ -5,6 +5,7 @@ mod schema;
 
 use std::error::Error;
 use std::sync::Arc;
+use std::time::{ Duration, Instant };
 
 use chrono::Local;
 use clap::Parser;
@@ -34,10 +35,28 @@ struct Args
 const FORCE_SYNCHRONIZE_ON_STARTUP: bool = true;
 const FORCE_SYNCHRONIZE_ON_SCHEDULE: bool = false;
 
+
+// Formats a duration as "Xh Ym Z.mmms"
+fn format_duration(duration: Duration) -> String
+{
+	let total_seconds = duration.as_secs();
+
+	format!(
+		"{}h {}m {}.{:03}s",
+		total_seconds / 3600,
+		(total_seconds % 3600) / 60,
+		total_seconds % 60,
+		duration.subsec_millis(),
+	)
+}
+
+
 // Entry point: sets up resources, runs the scheduler, and always closes the DB.
 #[tokio::main]
 async fn main() -> AppResult<()>
 {
+	let process_start = Instant::now();
+
 	dotenv().ok();
 
 	let args = Args::parse();
@@ -61,8 +80,11 @@ async fn main() -> AppResult<()>
 		log_error!("Failed to close database connection: {}", e);
 	}
 
+	log_info!("Security Profile Builder ran for {}", format_duration(process_start.elapsed()));
+
 	result
 }
+
 
 // Runs the optional immediate sync, then the daily 4am loop until a shutdown signal.
 async fn run(args: &Args, handler_database_security_synchronizer: &HandlerDatabaseSecuritySynchronizer) -> AppResult<()>
@@ -71,18 +93,30 @@ async fn run(args: &Args, handler_database_security_synchronizer: &HandlerDataba
 	{
 		log_info!("Running synchronization immediately");
 
+		let startup_start = Instant::now();
 		let startup_result = handler_database_security_synchronizer.synchronize(FORCE_SYNCHRONIZE_ON_STARTUP).await;
+		let startup_elapsed = format_duration(startup_start.elapsed());
 
 		if args.once
 		{
+			match &startup_result
+			{
+				Ok(_) => log_info!("Single synchronization completed in {}", startup_elapsed),
+				Err(_) => log_error!("Single synchronization failed after {}", startup_elapsed),
+			}
+
 			// Single run mode: pass the error up so the process exits with a failure code
 			return startup_result;
 		}
 
 		match startup_result
 		{
-			Ok(_) => log_info!("Immediate execution completed"),
-			Err(error) => log_error!("Startup synchronization failed: {} (will retry at next 4am)", error),
+			Ok(_) => log_info!("Immediate execution completed in {}", startup_elapsed),
+			Err(error) => log_error!(
+				"Startup synchronization failed after {}: {} (will retry at next 4am)",
+				startup_elapsed,
+				error,
+			),
 		}
 	}
 
@@ -91,12 +125,8 @@ async fn run(args: &Args, handler_database_security_synchronizer: &HandlerDataba
 	loop
 	{
 		let delay = HandlerTime::new().calculate_seconds_until_next_4am();
-		let delay_seconds = delay.as_secs();
 
-		log_info!(
-			"Next execution in {}h {}m {}s",
-			delay_seconds / 3600, (delay_seconds % 3600) / 60, delay_seconds % 60
-		);
+		log_info!("Next execution in {}", format_duration(delay));
 
 		tokio::select!
 		{
@@ -113,10 +143,18 @@ async fn run(args: &Args, handler_database_security_synchronizer: &HandlerDataba
 			}
 		}
 
-		match handler_database_security_synchronizer.synchronize(FORCE_SYNCHRONIZE_ON_SCHEDULE).await
+		let scheduled_start = Instant::now();
+		let scheduled_result = handler_database_security_synchronizer.synchronize(FORCE_SYNCHRONIZE_ON_SCHEDULE).await;
+		let scheduled_elapsed = format_duration(scheduled_start.elapsed());
+
+		match scheduled_result
 		{
-			Ok(_) => log_info!("Scheduled synchronization completed"),
-			Err(e) => log_error!("Scheduled synchronization failed: {} (will retry at next 4am)", e),
+			Ok(_) => log_info!("Scheduled synchronization completed in {}", scheduled_elapsed),
+			Err(e) => log_error!(
+				"Scheduled synchronization failed after {}: {} (will retry at next 4am)",
+				scheduled_elapsed,
+				e,
+			),
 		}
 	}
 }
