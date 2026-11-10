@@ -295,6 +295,13 @@ impl HandlerDatabaseSecuritySynchronizer
 
 		for (index, (submission_file_name, submission_file_hash)) in file_names_to_hashes.into_iter().enumerate()
 		{
+			if !submission_file_name.ends_with(".json")
+			{
+				log_ultradebug!("submissions/{} is not a JSON file, skipping..", submission_file_name);
+
+				continue;
+			}
+
 			if let Err(e) = self._process_submission_file(
 				force_synchronize,
 				&mut handler_file_companyfacts_zip,
